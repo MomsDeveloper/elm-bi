@@ -6,6 +6,8 @@
 module Main exposing (main)
 
 import Browser
+import Url exposing (Url)
+import Browser.Navigation as Navigation
 import Html exposing (..)
 import Html.Attributes exposing (style)
 import Html.Events exposing (..)
@@ -25,11 +27,13 @@ import Decoders exposing (..)
 
 
 main =
-  Browser.element
+  Browser.application
     { init = init
     , update = update
     , subscriptions = subscriptions
     , view = view
+    , onUrlChange = UrlChanged
+    , onUrlRequest = LinkClicked
     }
 
 
@@ -41,13 +45,21 @@ type Loading a =
   | Finished a
 
 type alias Model =
-    { dashboards : Loading (Result String (List Dashboard)) }
+    { dashboards : Loading (Result String (List Dashboard)) 
+    , currentDashboard : Maybe Int
+    , navKey : Navigation.Key
+    , url : Url
+    }
 
-
-init : () -> (Model, Cmd Msg)
-init _ =
-  (Model Loading, get_dashboards)
-
+init : () -> Url -> Navigation.Key -> (Model, Cmd Msg)
+init _ url key =
+  ( { dashboards = Loading
+    , currentDashboard = Nothing
+    , navKey = key
+    , url = url
+    }
+  , get_dashboards
+  )
 
 -- UPDATE
 
@@ -72,49 +84,119 @@ errorToString error =
 
 type Msg 
     = GotDashboards (Result Http.Error (List Dashboard))
+    | NavigateToDashboard Int
+    | NavigateToHome
+    | UrlChanged Url
+    | LinkClicked Browser.UrlRequest
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
   case msg of
     GotDashboards (Ok dashboard) ->
-      -- (model (Finished (Ok dashboard)), Cmd.none)
       ({ model | dashboards = Finished (Ok dashboard) }, Cmd.none)
 
     GotDashboards (Err error) ->
       let
           _ = Debug.log "HTTP Error" error
       in
-      (Model (Finished (Err (errorToString error))), Cmd.none)
+      ({ model | dashboards = Finished (Err (errorToString error)) }, Cmd.none)
+        
+    NavigateToDashboard dashboard_id ->
+      let
+          newUrl = "/dashboard/" ++ String.fromInt dashboard_id
+      in
+      -- (model, Navigation.pushUrl model.navKey newUrl)
+      ({ model | currentDashboard = Just dashboard_id }, Navigation.pushUrl model.navKey newUrl)
+    
+    NavigateToHome ->
+      ({ model | currentDashboard = Nothing }, Navigation.pushUrl model.navKey "/")
 
+    UrlChanged url ->
+      ({ model | url = url }, Cmd.none)
 
+    LinkClicked urlRequest ->
+      case urlRequest of
+        Browser.Internal url ->
+          (model, Navigation.pushUrl model.navKey (Url.toString url))
+
+        Browser.External href ->
+          (model, Navigation.load href)
 
 -- SUBSCRIPTIONS
 
 
 subscriptions : Model -> Sub Msg
-subscriptions model =
+subscriptions _ =
   Sub.none
 
 
 
 -- VIEW
 
+renderDashboardSquare : Dashboard -> Html Msg
+renderDashboardSquare dashboard =
+    div 
+        [ style "width" "100px"
+        , style "height" "100px"
+        , style "border" "1px solid black"
+        , style "margin" "10px"
+        , style "display" "flex"
+        , style "align-items" "center"
+        , style "justify-content" "center"
+        , style "cursor" "pointer" -- Makes it clear the div is clickable
+        , onClick (NavigateToDashboard dashboard.dashboard_id)
+        ]
+        [ text dashboard.title ]
 
-view : Model -> Html Msg
+renderAddDashboardSquare : Html Msg
+renderAddDashboardSquare =
+    div 
+        [ style "width" "100px"
+        , style "height" "100px"
+        , style "border" "1px solid black"
+        , style "margin" "10px"
+        , style "display" "flex"
+        , style "align-items" "center"
+        , style "justify-content" "center"
+        , style "cursor" "pointer" -- Makes it clear the div is clickable
+        , onClick (NavigateToDashboard 0)
+        ]
+        [ text "+" ]
+
+view : Model -> Browser.Document Msg
 view model =
-  case model.dashboards of
-    Loading ->
-      div [] [ text "Loading..." ]
+  { title = 
+      case model.currentDashboard of
+        Just dashboard_id ->
+          "Dashboard " ++ String.fromInt dashboard_id
 
-    Finished (Ok (dashboard :: _) ) ->
-      div [] [ text dashboard.title ]
+        Nothing ->
+          "Dashboard"
+  , body =
+      case model.currentDashboard of
+        Just dashboard_id ->
+          -- [ div [] [ text ("Dashboard " ++ String.fromInt dashboard_id) ] ]
+          [div [] [ div [] 
+            [ text "Dashboard " 
+            , text (String.fromInt dashboard_id) 
+            , button [ onClick (NavigateToHome) ] [ text "Back"]
+            ]
+          ]
+          ]
 
-    Finished (Ok [] ) ->
-      div [] [ text "nothing" ]
-    
-    Finished (Err error) ->
-      div [] [ text error ]
+        Nothing ->
+          case model.dashboards of
+            Loading ->
+              [ div [] [ text "Loading..." ] ]
 
+            Finished (Ok dashboards) ->
+              [ div [] (List.map renderDashboardSquare dashboards) 
+              , renderAddDashboardSquare
+              ]
+            
+            Finished (Err error) ->
+              [ div [] [ text error ] ]
+  }
 
 
 
