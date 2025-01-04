@@ -1,8 +1,3 @@
--- Press a button to send a GET request for random quotes.
---
--- Read how it works:
---   https://guide.elm-lang.org/effects/json.html
---
 module Main exposing (main)
 
 import Browser
@@ -84,10 +79,13 @@ errorToString error =
 
 type Msg 
     = GotDashboards (Result Http.Error (List Dashboard))
+    | GotDashboard (Result Http.Error Dashboard)
+    | CreateDashboard
     | NavigateToDashboard Int
     | NavigateToHome
     | UrlChanged Url
     | LinkClicked Browser.UrlRequest
+
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
@@ -100,12 +98,23 @@ update msg model =
           _ = Debug.log "HTTP Error" error
       in
       ({ model | dashboards = Finished (Err (errorToString error)) }, Cmd.none)
-        
+
+    GotDashboard (Ok dashboard) ->
+      (addNewDashboard model dashboard, get_dashboards)
+
+    GotDashboard (Err error) ->
+      let
+          _ = Debug.log "HTTP Error" error
+      in
+      (model, Cmd.none)
+
+    CreateDashboard ->
+      (model, create_dashboard)
+
     NavigateToDashboard dashboard_id ->
       let
           newUrl = "/dashboard/" ++ String.fromInt dashboard_id
       in
-      -- (model, Navigation.pushUrl model.navKey newUrl)
       ({ model | currentDashboard = Just dashboard_id }, Navigation.pushUrl model.navKey newUrl)
     
     NavigateToHome ->
@@ -121,6 +130,18 @@ update msg model =
 
         Browser.External href ->
           (model, Navigation.load href)
+
+addNewDashboard : Model -> Dashboard -> Model
+addNewDashboard model dashboard =
+  case model.dashboards of
+    Loading ->
+      model
+
+    Finished (Ok dashboards) ->
+      { model | dashboards = Finished (Ok (dashboards ++ [dashboard])) }
+
+    Finished (Err error) ->
+      model
 
 -- SUBSCRIPTIONS
 
@@ -143,7 +164,7 @@ renderDashboardSquare dashboard =
         , style "display" "flex"
         , style "align-items" "center"
         , style "justify-content" "center"
-        , style "cursor" "pointer" -- Makes it clear the div is clickable
+        , style "cursor" "pointer" 
         , onClick (NavigateToDashboard dashboard.dashboard_id)
         ]
         [ text dashboard.title ]
@@ -158,8 +179,8 @@ renderAddDashboardSquare =
         , style "display" "flex"
         , style "align-items" "center"
         , style "justify-content" "center"
-        , style "cursor" "pointer" -- Makes it clear the div is clickable
-        , onClick (NavigateToDashboard 0)
+        , style "cursor" "pointer" 
+        , onClick (CreateDashboard)
         ]
         [ text "+" ]
 
@@ -175,7 +196,6 @@ view model =
   , body =
       case model.currentDashboard of
         Just dashboard_id ->
-          -- [ div [] [ text ("Dashboard " ++ String.fromInt dashboard_id) ] ]
           [div [] [ div [] 
             [ text "Dashboard " 
             , text (String.fromInt dashboard_id) 
@@ -210,3 +230,10 @@ get_dashboards =
     , expect = Http.expectJson GotDashboards (list dashboardDecoder)
     }
 
+create_dashboard : Cmd Msg
+create_dashboard =
+  Http.post
+    { url = "http://127.0.0.1:6969/create-dashboard"
+    , body = Http.emptyBody
+    , expect = Http.expectJson GotDashboard dashboardDecoder
+    }
