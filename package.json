@@ -1,0 +1,13 @@
+{
+    "scripts": {
+      "lint": "elm-analyse",
+      "format": "elm-format src --yes",
+      "test": "elm-test"
+    },
+    "devDependencies": {
+      "elm": "^0.19.1",
+      "elm-analyse": "^0.16.5",
+      "elm-format": "^0.8.3",
+      "elm-test": "^0.19.1-revision12"
+    }
+  }
