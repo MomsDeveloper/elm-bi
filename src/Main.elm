@@ -4,10 +4,9 @@ import Browser
 import Url exposing (Url)
 import Browser.Navigation as Navigation
 import Html exposing (..)
-import Html.Attributes exposing (style)
+import Html.Attributes exposing (placeholder, type_, class)
 import Html.Events exposing (..)
 import Http
-import Json.Decode exposing (list)
 
 -- import Chart exposing (Chart)
 -- import Chart.Pie exposing (slice)
@@ -17,6 +16,8 @@ import Json.Decode exposing (list)
 
 import Types exposing (..)
 import Decoders exposing (..)
+import Message exposing (..)
+import Api exposing (..)
 
 -- MAIN
 
@@ -41,7 +42,9 @@ type Loading a =
 
 type alias Model =
     { dashboards : Loading (Result String (List Dashboard)) 
-    , currentDashboard : Maybe Int
+    , currentDashboard : Maybe Dashboard
+    , newDashboard : Maybe Dashboard
+    , showForm : Bool 
     , navKey : Navigation.Key
     , url : Url
     }
@@ -50,6 +53,8 @@ init : () -> Url -> Navigation.Key -> (Model, Cmd Msg)
 init _ url key =
   ( { dashboards = Loading
     , currentDashboard = Nothing
+    , newDashboard = Nothing
+    , showForm = False
     , navKey = key
     , url = url
     }
@@ -77,16 +82,6 @@ errorToString error =
       "Bad body: " ++ body
 
 
-type Msg 
-    = GotDashboards (Result Http.Error (List Dashboard))
-    | GotDashboard (Result Http.Error Dashboard)
-    | CreateDashboard
-    | NavigateToDashboard Int
-    | NavigateToHome
-    | UrlChanged Url
-    | LinkClicked Browser.UrlRequest
-
-
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
   case msg of
@@ -99,29 +94,149 @@ update msg model =
       in
       ({ model | dashboards = Finished (Err (errorToString error)) }, Cmd.none)
 
-    GotDashboard (Ok dashboard) ->
-      (addNewDashboard model dashboard, get_dashboards)
+    UpdateCurrentDashboard (Ok dashboard) ->
+      (updateCurrentDashboard model dashboard, Cmd.none)
 
-    GotDashboard (Err error) ->
-      let
-          _ = Debug.log "HTTP Error" error
-      in
+    UpdateCurrentDashboard (Err _) ->
       (model, Cmd.none)
 
     CreateDashboard ->
-      (model, create_dashboard)
+      case model.newDashboard of
+          Just dashboard ->
+              (model, create_dashboard dashboard)
+          Nothing ->
+              (model, Cmd.none)
 
-    NavigateToDashboard dashboard_id ->
-      let
-          newUrl = "/dashboard/" ++ String.fromInt dashboard_id
-      in
-      ({ model | currentDashboard = Just dashboard_id }, Navigation.pushUrl model.navKey newUrl)
+    NewPassword password ->
+      case model.newDashboard of
+          Just dashboard ->
+              let
+                  dataSource = dashboard.dataSource
+                  newDataSource = { dataSource | password = password }
+                  newDashboard = { dashboard | dataSource = newDataSource }
+              in
+              ({ model | newDashboard = Just newDashboard }, Cmd.none)
+          Nothing ->
+              let
+                  newDataSource = { host = "", portNumber = 0, username = "", password = "", database = "" }
+                  newDashboard = { dashboard_id = -1, title = "", widgets = [], dataSource = newDataSource }
+              in
+              ({ model | newDashboard = Just newDashboard }, Cmd.none)
+
+    NewUsername username ->
+      case model.newDashboard of
+          Just dashboard ->
+              let
+                  dataSource = dashboard.dataSource
+                  newDataSource = { dataSource | username = username }
+                  newDashboard = { dashboard | dataSource = newDataSource }
+              in
+              ({ model | newDashboard = Just newDashboard }, Cmd.none)
+          Nothing ->
+              let
+                  newDataSource = { host = "", portNumber = 0, username = "", password = "", database = "" }
+                  newDashboard = { dashboard_id = -1, title = "", widgets = [], dataSource = newDataSource }
+              in
+              ({ model | newDashboard = Just newDashboard }, Cmd.none)
+
+    NewHost host ->
+      case model.newDashboard of
+          Just dashboard ->
+              let
+                  dataSource = dashboard.dataSource
+                  newDataSource = { dataSource | host = host }
+                  newDashboard = { dashboard | dataSource = newDataSource }
+              in
+              ({ model | newDashboard = Just newDashboard }, Cmd.none)
+          Nothing ->
+              let
+                  newDataSource = { host = "", portNumber = 0, username = "", password = "", database = "" }
+                  newDashboard = { dashboard_id = -1, title = "", widgets = [], dataSource = newDataSource }
+              in
+              ({ model | newDashboard = Just newDashboard }, Cmd.none)
+
+    NewPort hostPort ->
+      case model.newDashboard of
+          Just dashboard ->
+              let
+                  dataSource = dashboard.dataSource
+                  newDataSource = { dataSource | portNumber = String.toInt hostPort |> Maybe.withDefault 0 }
+                  newDashboard = { dashboard | dataSource = newDataSource }
+              in
+              ({ model | newDashboard = Just newDashboard }, Cmd.none)
+          Nothing ->
+              let
+                  newDataSource = { host = "", portNumber = 0, username = "", password = "", database = "" }
+                  newDashboard = { dashboard_id = -1, title = "", widgets = [], dataSource = newDataSource }
+              in
+              ({ model | newDashboard = Just newDashboard }, Cmd.none)
+
+    NewDatabase database ->
+      case model.newDashboard of
+          Just dashboard ->
+              let
+                  dataSource = dashboard.dataSource
+                  newDataSource = { dataSource | database = database }
+                  newDashboard = { dashboard | dataSource = newDataSource }
+              in
+              ({ model | newDashboard = Just newDashboard }, Cmd.none)
+          Nothing ->
+              let
+                  newDataSource = { host = "", portNumber = 0, username = "", password = "", database = "" }
+                  newDashboard = { dashboard_id = -1, title = "", widgets = [], dataSource = newDataSource }
+              in
+              ({ model | newDashboard = Just newDashboard }, Cmd.none)
+
+    NewTitle title ->
+      case model.newDashboard of
+          Just dashboard ->
+              let
+                  newDashboard = { dashboard | title = title }
+              in
+              ({ model | newDashboard = Just newDashboard }, Cmd.none)
+          Nothing ->
+              let
+                  newDataSource = { host = "", portNumber = 0, username = "", password = "", database = "" }
+                  newDashboard = { dashboard_id = -1, title = "", widgets = [], dataSource = newDataSource }
+              in
+              ({ model | newDashboard = Just newDashboard }, Cmd.none)
+
+    ShowForm ->
+      ({ model | showForm = True }, Cmd.none)
+
+    CloseForm ->
+      ({ model | showForm = False , newDashboard = Nothing }, Cmd.none)
+
+    NavigateToDashboard dashboardResult ->
+      case dashboardResult of
+        Ok newDashboard ->
+          let
+              newUrl = "/dashboard/" ++ String.fromInt newDashboard.dashboard_id
+          in
+          ({ model | currentDashboard = Just newDashboard , showForm = False , newDashboard = Nothing }, Navigation.pushUrl model.navKey newUrl)
+          
+        Err error ->
+          let
+              _ = Debug.log "HTTP Error" error
+          in
+          (model, Cmd.none)
     
     NavigateToHome ->
       ({ model | currentDashboard = Nothing }, Navigation.pushUrl model.navKey "/")
 
     UrlChanged url ->
-      ({ model | url = url }, Cmd.none)
+      case model.currentDashboard of
+        Just _ ->
+          let
+              _ = Debug.log "URL Changed" url
+          in
+          (model, Cmd.none)
+
+        Nothing ->
+          let
+              _ = Debug.log "URL Changed" url
+          in
+          (model, get_dashboards)
 
     LinkClicked urlRequest ->
       case urlRequest of
@@ -131,17 +246,10 @@ update msg model =
         Browser.External href ->
           (model, Navigation.load href)
 
-addNewDashboard : Model -> Dashboard -> Model
-addNewDashboard model dashboard =
-  case model.dashboards of
-    Loading ->
-      model
 
-    Finished (Ok dashboards) ->
-      { model | dashboards = Finished (Ok (dashboards ++ [dashboard])) }
-
-    Finished (Err error) ->
-      model
+updateCurrentDashboard : Model -> Dashboard -> Model
+updateCurrentDashboard model dashboard =
+  { model | currentDashboard = Just dashboard }
 
 -- SUBSCRIPTIONS
 
@@ -157,48 +265,108 @@ subscriptions _ =
 renderDashboardSquare : Dashboard -> Html Msg
 renderDashboardSquare dashboard =
     div 
-        [ style "width" "100px"
-        , style "height" "100px"
-        , style "border" "1px solid black"
-        , style "margin" "10px"
-        , style "display" "flex"
-        , style "align-items" "center"
-        , style "justify-content" "center"
-        , style "cursor" "pointer" 
-        , onClick (NavigateToDashboard dashboard.dashboard_id)
+        [ class "dashboard-square"
+        , onClick (NavigateToDashboard (Ok dashboard))
         ]
         [ text dashboard.title ]
 
 renderAddDashboardSquare : Html Msg
 renderAddDashboardSquare =
     div 
-        [ style "width" "100px"
-        , style "height" "100px"
-        , style "border" "1px solid black"
-        , style "margin" "10px"
-        , style "display" "flex"
-        , style "align-items" "center"
-        , style "justify-content" "center"
-        , style "cursor" "pointer" 
-        , onClick (CreateDashboard)
+        [ class "dashboard-square"
+        , onClick ShowForm
         ]
         [ text "+" ]
+
+
+renderAddNewDashboardForm : Html Msg
+renderAddNewDashboardForm =
+  div [ class "form" ]
+          [ div [ class "form-content" ]
+            [
+              div [ class "form-group" ]
+                  [ label [] [ text "Password" ]
+                  , input
+                      [ type_ "password"
+                      , placeholder "Enter your password"
+                      , onInput NewPassword
+                      ]
+                      []
+                  ]
+              , div [ class "form-group" ]
+                  [ label [] [ text "Username" ]
+                  , input
+                      [ type_ "text"
+                      , placeholder "Enter your username"
+                      , onInput NewUsername
+                      ]
+                      []
+                  ]
+              , div [ class "form-group" ]
+                  [ label [] [ text "Host" ]
+                  , input
+                      [ type_ "text"
+                      , placeholder "Enter your host"
+                      , onInput NewHost
+                      ]
+                      []
+                  ]
+              , div [ class "form-group" ]
+                  [ label [] [ text "Port" ]
+                  , input
+                      [ type_ "text"
+                      , placeholder "Enter your port"
+                      , onInput NewPort
+                      ]
+                      []
+                  ]
+              , div [ class "form-group" ]
+                  [ label [] [ text "Database" ]
+                  , input
+                      [ type_ "text"
+                      , placeholder "Enter your database"
+                      , onInput NewDatabase
+                      ]
+                      []
+                  ]
+              , div [ class "form-group" ]
+                  [ label [] [ text "Dashboard Title" ]
+                  , input
+                      [ type_ "text"
+                      , placeholder "Enter dashboard title"
+                      , onInput NewTitle
+                      ]
+                      []
+                  ]
+              , div [ class "form-buttons" ]
+                  [ button [ onClick CloseForm ] [ text "Cancel" ]
+                  , button [ onClick CreateDashboard ] [ text "Create" ]
+                  ]
+              ]
+          ]
+          
 
 view : Model -> Browser.Document Msg
 view model =
   { title = 
       case model.currentDashboard of
-        Just dashboard_id ->
-          "Dashboard " ++ String.fromInt dashboard_id
+        Just dashboard ->
+          "Dashboard " ++ String.fromInt dashboard.dashboard_id
 
         Nothing ->
           "Dashboard"
   , body =
+      node "link" 
+          [ Html.Attributes.rel "stylesheet"
+          , Html.Attributes.href "/styles/main.css"
+          ]
+          []
+      ::
       case model.currentDashboard of
-        Just dashboard_id ->
+        Just dashboard ->
           [div [] [ div [] 
             [ text "Dashboard " 
-            , text (String.fromInt dashboard_id) 
+            , text (String.fromInt dashboard.dashboard_id) 
             , button [ onClick (NavigateToHome) ] [ text "Back"]
             ]
           ]
@@ -212,28 +380,9 @@ view model =
             Finished (Ok dashboards) ->
               [ div [] (List.map renderDashboardSquare dashboards) 
               , renderAddDashboardSquare
+              , if model.showForm then renderAddNewDashboardForm else div [] []
               ]
             
             Finished (Err error) ->
               [ div [] [ text error ] ]
   }
-
-
-
--- HTTP
-
-get_dashboards : Cmd Msg
-get_dashboards =
-  Http.post
-    { url = "http://127.0.0.1:6969/get-dashboards"
-    , body = Http.emptyBody
-    , expect = Http.expectJson GotDashboards (list dashboardDecoder)
-    }
-
-create_dashboard : Cmd Msg
-create_dashboard =
-  Http.post
-    { url = "http://127.0.0.1:6969/create-dashboard"
-    , body = Http.emptyBody
-    , expect = Http.expectJson GotDashboard dashboardDecoder
-    }

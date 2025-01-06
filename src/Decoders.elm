@@ -10,7 +10,7 @@ dashboardDecoder =
     (field "dashboard_id" int)
     (field "title" string)
     (field "widgets" (list widgetDecoder))
-    (field "dataSource" (nullable dataSourceDecoder))
+    (field "dataSource" (dataSourceDecoder))
 
 
 widgetDecoder : Decoder Widget
@@ -81,3 +81,86 @@ dataSourceDecoder =
     (field "password" string)
     (field "database" string)
 
+  
+dashboardEncoder : Dashboard -> Value
+dashboardEncoder dashboard =
+  Json.Encode.object
+    [ ("dashboard_id", Json.Encode.int dashboard.dashboard_id)
+    , ("title", Json.Encode.string dashboard.title)
+    , ("widgets", Json.Encode.list widgetEncoder dashboard.widgets)
+    , ("dataSource", dataSourceEncoder dashboard.dataSource)
+    ]
+
+widgetEncoder : Widget -> Value
+widgetEncoder widget =
+  case widget of
+    Pie { title, table, x_column, sections } ->
+      Json.Encode.object
+        [ ("widget_type", Json.Encode.string "PieChart")
+        , ("title", Json.Encode.string title)
+        , ("table", Json.Encode.string table)
+        , ("x_column", Json.Encode.string x_column)
+        , ("sections", case sections of
+            Nothing -> Json.Encode.null
+            Just s -> Json.Encode.list pieSectionEncoder s
+          )
+        ]
+        
+    Histogram { title, table, x_column, sections } ->
+      Json.Encode.object
+        [ ("widget_type", Json.Encode.string "Histogram")
+        , ("title", Json.Encode.string title)
+        , ("table", Json.Encode.string table)
+        , ("x_column", Json.Encode.string x_column)
+        , ("bins", case sections of
+            Nothing -> Json.Encode.null
+            Just s -> Json.Encode.list binEncoder s
+          )
+        ]
+        
+pieSectionEncoder : PieSection -> Value
+pieSectionEncoder pieSection =
+  Json.Encode.object
+    [ ("title", Json.Encode.string pieSection.title)
+    , ("percentage", Json.Encode.float pieSection.percentage)
+    ]
+
+binEncoder : Bin -> Value
+binEncoder bin =
+  Json.Encode.object
+    [ ("range", Json.Encode.object
+        [ ("left", case bin.range.left of
+            Nothing -> Json.Encode.null
+            Just value -> Json.Encode.float value
+          )
+        , ("right", case bin.range.right of
+            Nothing -> Json.Encode.null
+            Just value -> Json.Encode.float value
+          )
+        ]
+      )
+    , ("value", Json.Encode.float bin.value)
+    ]
+
+dataSourceEncoder : DataSource -> Value
+dataSourceEncoder dataSource =
+  Json.Encode.object
+    [ ("host", Json.Encode.string dataSource.host)
+    , ("port", Json.Encode.int dataSource.portNumber)
+    , ("username", Json.Encode.string dataSource.username)
+    , ("password", Json.Encode.string dataSource.password)
+    , ("database", Json.Encode.string dataSource.database)
+    ]
+
+tableDecoder : Decoder Table
+tableDecoder =
+  map2 Table
+    (field "name" string)
+    (field "columns" (list tableColumnDecoder))
+
+  
+tableColumnDecoder : Decoder TableColumn
+tableColumnDecoder =
+  map2 TableColumn
+    (field "name" string)
+    (field "dataType" string)

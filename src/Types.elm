@@ -30,6 +30,19 @@ type alias Dashboard =
   { dashboard_id : Int
   , title : String
   , widgets : List Widget
-  , dataSource : Maybe DataSource
+  , dataSource : DataSource
   }
 
+type alias TableColumn = 
+  { name : String
+  , dataType : String
+  }
+
+type alias Table = 
+  {
+    name : String
+    , columns : List TableColumn
+  }
+
+type alias Error = 
+  { detail : String }
