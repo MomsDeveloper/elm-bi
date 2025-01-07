@@ -8,7 +8,6 @@ import Browser.Navigation as Nav
 type Route
     = NotFound
     | Dashboards
-    | EditDashboard DashboardId
     | Dashboard DashboardId
 
 
@@ -26,7 +25,6 @@ matchRoute =
     oneOf
         [ map Dashboards top
         , map Dashboards (s "dashboards")
-        , map EditDashboard (s "dashboards" </> Dashboard.idParser </> s "edit")
         , map Dashboard (s "dashboards" </> Dashboard.idParser)
         ]
 
@@ -44,9 +42,6 @@ routeToString route =
 
         Dashboards ->
             "/dashboards"
-
-        EditDashboard dashboardId ->
-            "/dashboards/" ++ Dashboard.idToString dashboardId ++ "/edit" 
 
         Dashboard dashboardId ->
             "/dashboards/" ++ Dashboard.idToString dashboardId

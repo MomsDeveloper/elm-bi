@@ -7,7 +7,6 @@ import Url exposing (Url)
 import Browser.Navigation as Nav
 import Page.ListDashboards as ListDashboards
 import Route exposing (Route)
-import Page.EditDashboard as EditDashboard
 
 main : Program () Model Msg
 main =
@@ -30,13 +29,11 @@ type alias Model =
 type Page
     = NotFoundPage
     | ListPage ListDashboards.Model
-    | EditDashboardPage EditDashboard.Model
 
 type Msg
     = ListPageMsg ListDashboards.Msg
     | LinkClicked UrlRequest
     | UrlChanged Url
-    | EditDashboardPageMsg EditDashboard.Msg
 
 init : () -> Url -> Nav.Key -> ( Model, Cmd Msg )
 init _ url navKey =
@@ -61,16 +58,9 @@ initCurrentPage ( model, existingCmds ) =
                 Route.Dashboards ->
                     let
                         ( pageModel, pageCmds ) =
-                            ListDashboards.init
+                            ListDashboards.init model.navKey
                     in
                     ( ListPage pageModel, Cmd.map ListPageMsg pageCmds )
-
-                Route.EditDashboard dashboardId ->
-                    let
-                        ( pageModel, pageCmd ) =
-                            EditDashboard.init dashboardId model.navKey
-                    in
-                    ( EditDashboardPage pageModel, Cmd.map EditDashboardPageMsg pageCmd )
 
                 Route.Dashboard dashboardId ->
                     ( NotFoundPage, Cmd.none )
@@ -79,31 +69,6 @@ initCurrentPage ( model, existingCmds ) =
     , Cmd.batch [ existingCmds, mappedPageCmds ]
     )
 
-view : Model -> Document Msg
-view model =
-    { title = "Post App"
-    , body = [ currentView model ]
-    }
-
-
-currentView : Model -> Html Msg
-currentView model =
-    case model.page of
-        NotFoundPage ->
-            notFoundView
-
-        ListPage pageModel ->
-            ListDashboards.view pageModel
-                |> Html.map ListPageMsg
-
-        EditDashboardPage pageModel ->
-            EditDashboard.view pageModel
-                |> Html.map EditDashboardPageMsg
-    
-
-notFoundView : Html msg
-notFoundView =
-    h3 [] [ text "Oops! The page you requested was not found!" ]
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
@@ -137,14 +102,28 @@ update msg model =
             ( { model | route = newRoute }, Cmd.none )
                 |> initCurrentPage
 
-        ( EditDashboardPageMsg subMsg, EditDashboardPage pageModel ) ->
-            let
-                ( updatedPageModel, updatedCmd ) =
-                    EditDashboard.update subMsg pageModel
-            in
-            ( { model | page = EditDashboardPage updatedPageModel }
-            , Cmd.map EditDashboardPageMsg updatedCmd
-            )
-
         ( _, _ ) ->
             ( model, Cmd.none )
+
+
+view : Model -> Document Msg
+view model =
+    { title = "Post App"
+    , body = [ currentView model ]
+    }
+
+
+currentView : Model -> Html Msg
+currentView model =
+    case model.page of
+        NotFoundPage ->
+            notFoundView
+
+        ListPage pageModel ->
+            ListDashboards.view pageModel
+                |> Html.map ListPageMsg
+    
+
+notFoundView : Html msg
+notFoundView =
+    h3 [] [ text "Oops! The page you requested was not found!" ]
