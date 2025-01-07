@@ -6,6 +6,7 @@ import Html exposing (..)
 import Url exposing (Url)
 import Browser.Navigation as Nav
 import Page.ListDashboards as ListDashboards
+import Page.DashboardPage as DashboardPage
 import Route exposing (Route)
 
 main : Program () Model Msg
@@ -29,9 +30,11 @@ type alias Model =
 type Page
     = NotFoundPage
     | ListPage ListDashboards.Model
+    | DashboardPage DashboardPage.Model
 
 type Msg
     = ListPageMsg ListDashboards.Msg
+    | DashboardPageMsg DashboardPage.Msg
     | LinkClicked UrlRequest
     | UrlChanged Url
 
@@ -63,7 +66,11 @@ initCurrentPage ( model, existingCmds ) =
                     ( ListPage pageModel, Cmd.map ListPageMsg pageCmds )
 
                 Route.Dashboard dashboardId ->
-                    ( NotFoundPage, Cmd.none )
+                    let
+                        ( pageModel, pageCmds ) =
+                            DashboardPage.init dashboardId model.navKey
+                    in
+                    ( DashboardPage pageModel, Cmd.map DashboardPageMsg pageCmds )
     in
     ( { model | page = currentPage }
     , Cmd.batch [ existingCmds, mappedPageCmds ]
@@ -80,6 +87,15 @@ update msg model =
             in
             ( { model | page = ListPage updatedPageModel }
             , Cmd.map ListPageMsg updatedCmd
+            )
+        
+        ( DashboardPageMsg subMsg, DashboardPage pageModel ) ->
+            let
+                ( updatedPageModel, updatedCmd ) =
+                    DashboardPage.update subMsg pageModel
+            in
+            ( { model | page = DashboardPage updatedPageModel }
+            , Cmd.map DashboardPageMsg updatedCmd
             )
         
         ( LinkClicked urlRequest, _ ) ->
@@ -122,6 +138,10 @@ currentView model =
         ListPage pageModel ->
             ListDashboards.view pageModel
                 |> Html.map ListPageMsg
+
+        DashboardPage pageModel ->
+            DashboardPage.view pageModel
+                |> Html.map DashboardPageMsg
     
 
 notFoundView : Html msg

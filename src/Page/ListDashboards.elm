@@ -36,6 +36,7 @@ type Msg
     | Cancel
     | AddNewDashboard
     | DashboardCreated (Result Http.Error Dashboard)
+    | GoToDashboard DashboardId
 
 init : Nav.Key -> ( Model, Cmd Msg )
 init navKey =
@@ -179,6 +180,9 @@ update msg model =
         
         DashboardCreated (Err httpError) ->
             ( { model | createError = Just (buildErrorMessage httpError) }, Cmd.none )
+
+        GoToDashboard dashboardId ->
+            ( model, Route.pushUrl (Route.Dashboard dashboardId) model.navKey )
             
 
 emptyDashboard : Dashboard
@@ -300,7 +304,7 @@ viewDashboard : Dashboard -> Html Msg
 viewDashboard dashboard =
     tr []
         [ 
-         td []
+        td [ class "dashboard-square", onClick (GoToDashboard dashboard.dashboard_id) ]
             [ text dashboard.title ]
         , td []
             [ button [ type_ "button", onClick (DeleteDashboard dashboard.dashboard_id) ] [ text "Delete" ] ]

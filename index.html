@@ -5372,6 +5372,12 @@ var $elm$core$Task$perform = F2(
 	});
 var $elm$browser$Browser$application = _Browser_application;
 var $author$project$Main$NotFoundPage = {$: 'NotFoundPage'};
+var $author$project$Main$DashboardPage = function (a) {
+	return {$: 'DashboardPage', a: a};
+};
+var $author$project$Main$DashboardPageMsg = function (a) {
+	return {$: 'DashboardPageMsg', a: a};
+};
 var $author$project$Main$ListPage = function (a) {
 	return {$: 'ListPage', a: a};
 };
@@ -5379,11 +5385,11 @@ var $author$project$Main$ListPageMsg = function (a) {
 	return {$: 'ListPageMsg', a: a};
 };
 var $elm$core$Platform$Cmd$batch = _Platform_batch;
-var $author$project$Page$ListDashboards$DashboardsReceived = function (a) {
-	return {$: 'DashboardsReceived', a: a};
+var $author$project$Page$DashboardPage$DashboardReceived = function (a) {
+	return {$: 'DashboardReceived', a: a};
 };
-var $elm$core$Basics$composeR = F3(
-	function (f, g, x) {
+var $elm$core$Basics$composeL = F3(
+	function (g, f, x) {
 		return g(
 			f(x));
 	});
@@ -5521,7 +5527,7 @@ var $author$project$Dashboard$dashboardDecoder = A5(
 		'widgets',
 		$elm$json$Json$Decode$list($author$project$Dashboard$widgetDecoder)),
 	A2($elm$json$Json$Decode$field, 'dataSource', $author$project$Dashboard$dataSourceDecoder));
-var $author$project$Dashboard$dashboardsDecoder = $elm$json$Json$Decode$list($author$project$Dashboard$dashboardDecoder);
+var $elm$json$Json$Decode$decodeString = _Json_runOnString;
 var $elm$http$Http$BadStatus_ = F2(
 	function (a, b) {
 		return {$: 'BadStatus_', a: a, b: b};
@@ -6064,8 +6070,11 @@ var $elm$core$Dict$update = F3(
 			return A2($elm$core$Dict$remove, targetKey, dictionary);
 		}
 	});
-var $elm$http$Http$emptyBody = _Http_emptyBody;
-var $elm$json$Json$Decode$decodeString = _Json_runOnString;
+var $elm$core$Basics$composeR = F3(
+	function (f, g, x) {
+		return g(
+			f(x));
+	});
 var $elm$http$Http$expectStringResponse = F2(
 	function (toMsg, toResult) {
 		return A3(
@@ -6146,6 +6155,30 @@ var $krisajenkins$remotedata$RemoteData$fromResult = function (result) {
 		var x = result.a;
 		return $krisajenkins$remotedata$RemoteData$Success(x);
 	}
+};
+var $elm$json$Json$Encode$int = _Json_wrap;
+var $author$project$Dashboard$idEncoder = function (_v0) {
+	var id = _v0.a;
+	return $elm$json$Json$Encode$int(id);
+};
+var $elm$http$Http$jsonBody = function (value) {
+	return A2(
+		_Http_pair,
+		'application/json',
+		A2($elm$json$Json$Encode$encode, 0, value));
+};
+var $elm$json$Json$Encode$object = function (pairs) {
+	return _Json_wrap(
+		A3(
+			$elm$core$List$foldl,
+			F2(
+				function (_v0, obj) {
+					var k = _v0.a;
+					var v = _v0.b;
+					return A3(_Json_addField, k, v, obj);
+				}),
+			_Json_emptyObject(_Utils_Tuple0),
+			pairs));
 };
 var $elm$http$Http$Request = function (a) {
 	return {$: 'Request', a: a};
@@ -6319,6 +6352,39 @@ var $elm$http$Http$post = function (r) {
 	return $elm$http$Http$request(
 		{body: r.body, expect: r.expect, headers: _List_Nil, method: 'POST', timeout: $elm$core$Maybe$Nothing, tracker: $elm$core$Maybe$Nothing, url: r.url});
 };
+var $author$project$Page$DashboardPage$getDashboard = function (dashboardId) {
+	return $elm$http$Http$post(
+		{
+			body: $elm$http$Http$jsonBody(
+				$elm$json$Json$Encode$object(
+					_List_fromArray(
+						[
+							_Utils_Tuple2(
+							'dashboard_id',
+							$author$project$Dashboard$idEncoder(dashboardId))
+						]))),
+			expect: A2(
+				$elm$http$Http$expectJson,
+				A2($elm$core$Basics$composeL, $author$project$Page$DashboardPage$DashboardReceived, $krisajenkins$remotedata$RemoteData$fromResult),
+				$author$project$Dashboard$dashboardDecoder),
+			url: 'http://127.0.0.1:6969/get-dashboard'
+		});
+};
+var $krisajenkins$remotedata$RemoteData$Loading = {$: 'Loading'};
+var $author$project$Page$DashboardPage$initialModel = function (navKey) {
+	return {dashboard: $krisajenkins$remotedata$RemoteData$Loading, navKey: navKey};
+};
+var $author$project$Page$DashboardPage$init = F2(
+	function (dashboardId, navKey) {
+		return _Utils_Tuple2(
+			$author$project$Page$DashboardPage$initialModel(navKey),
+			$author$project$Page$DashboardPage$getDashboard(dashboardId));
+	});
+var $author$project$Page$ListDashboards$DashboardsReceived = function (a) {
+	return {$: 'DashboardsReceived', a: a};
+};
+var $author$project$Dashboard$dashboardsDecoder = $elm$json$Json$Decode$list($author$project$Dashboard$dashboardDecoder);
+var $elm$http$Http$emptyBody = _Http_emptyBody;
 var $author$project$Page$ListDashboards$fetchDashboards = $elm$http$Http$post(
 	{
 		body: $elm$http$Http$emptyBody,
@@ -6356,7 +6422,12 @@ var $author$project$Main$initCurrentPage = function (_v0) {
 					A2($elm$core$Platform$Cmd$map, $author$project$Main$ListPageMsg, pageCmds));
 			default:
 				var dashboardId = _v2.a;
-				return _Utils_Tuple2($author$project$Main$NotFoundPage, $elm$core$Platform$Cmd$none);
+				var _v4 = A2($author$project$Page$DashboardPage$init, dashboardId, model.navKey);
+				var pageModel = _v4.a;
+				var pageCmds = _v4.b;
+				return _Utils_Tuple2(
+					$author$project$Main$DashboardPage(pageModel),
+					A2($elm$core$Platform$Cmd$map, $author$project$Main$DashboardPageMsg, pageCmds));
 		}
 	}();
 	var currentPage = _v1.a;
@@ -6734,7 +6805,15 @@ var $elm$url$Url$toString = function (url) {
 					_Utils_ap(http, url.host)),
 				url.path)));
 };
-var $krisajenkins$remotedata$RemoteData$Loading = {$: 'Loading'};
+var $author$project$Page$DashboardPage$update = F2(
+	function (msg, model) {
+		var response = msg.a;
+		return _Utils_Tuple2(
+			_Utils_update(
+				model,
+				{dashboard: response}),
+			$elm$core$Platform$Cmd$none);
+	});
 var $author$project$Error$buildErrorMessage = function (httpError) {
 	switch (httpError.$) {
 		case 'BadUrl':
@@ -6754,20 +6833,6 @@ var $author$project$Error$buildErrorMessage = function (httpError) {
 };
 var $author$project$Page$ListDashboards$DashboardCreated = function (a) {
 	return {$: 'DashboardCreated', a: a};
-};
-var $elm$json$Json$Encode$int = _Json_wrap;
-var $elm$json$Json$Encode$object = function (pairs) {
-	return _Json_wrap(
-		A3(
-			$elm$core$List$foldl,
-			F2(
-				function (_v0, obj) {
-					var k = _v0.a;
-					var v = _v0.b;
-					return A3(_Json_addField, k, v, obj);
-				}),
-			_Json_emptyObject(_Utils_Tuple0),
-			pairs));
 };
 var $elm$json$Json$Encode$string = _Json_wrap;
 var $author$project$Dashboard$dataSourceEncoder = function (dataSource) {
@@ -6790,10 +6855,6 @@ var $author$project$Dashboard$dataSourceEncoder = function (dataSource) {
 				'database',
 				$elm$json$Json$Encode$string(dataSource.database))
 			]));
-};
-var $author$project$Dashboard$idEncoder = function (_v0) {
-	var id = _v0.a;
-	return $elm$json$Json$Encode$int(id);
 };
 var $elm$json$Json$Encode$list = F2(
 	function (func, entries) {
@@ -6937,12 +6998,6 @@ var $author$project$Dashboard$dashboardEncoder = function (dashboard) {
 				'dataSource',
 				$author$project$Dashboard$dataSourceEncoder(dashboard.dataSource))
 			]));
-};
-var $elm$http$Http$jsonBody = function (value) {
-	return A2(
-		_Http_pair,
-		'application/json',
-		A2($elm$json$Json$Encode$encode, 0, value));
 };
 var $author$project$Page$ListDashboards$create_dashboard = function (dashboard) {
 	return $elm$http$Http$post(
@@ -7184,7 +7239,7 @@ var $author$project$Page$ListDashboards$update = F2(
 				} else {
 					return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 				}
-			default:
+			case 'DashboardCreated':
 				if (msg.a.$ === 'Ok') {
 					var dashboard = msg.a.a;
 					return _Utils_Tuple2(
@@ -7204,55 +7259,84 @@ var $author$project$Page$ListDashboards$update = F2(
 							}),
 						$elm$core$Platform$Cmd$none);
 				}
+			default:
+				var dashboardId = msg.a;
+				return _Utils_Tuple2(
+					model,
+					A2(
+						$author$project$Route$pushUrl,
+						$author$project$Route$Dashboard(dashboardId),
+						model.navKey));
 		}
 	});
 var $author$project$Main$update = F2(
 	function (msg, model) {
 		var _v0 = _Utils_Tuple2(msg, model.page);
-		switch (_v0.a.$) {
-			case 'ListPageMsg':
-				if (_v0.b.$ === 'ListPage') {
-					var subMsg = _v0.a.a;
-					var pageModel = _v0.b.a;
-					var _v1 = A2($author$project$Page$ListDashboards$update, subMsg, pageModel);
-					var updatedPageModel = _v1.a;
-					var updatedCmd = _v1.b;
-					return _Utils_Tuple2(
-						_Utils_update(
+		_v0$4:
+		while (true) {
+			switch (_v0.a.$) {
+				case 'ListPageMsg':
+					if (_v0.b.$ === 'ListPage') {
+						var subMsg = _v0.a.a;
+						var pageModel = _v0.b.a;
+						var _v1 = A2($author$project$Page$ListDashboards$update, subMsg, pageModel);
+						var updatedPageModel = _v1.a;
+						var updatedCmd = _v1.b;
+						return _Utils_Tuple2(
+							_Utils_update(
+								model,
+								{
+									page: $author$project$Main$ListPage(updatedPageModel)
+								}),
+							A2($elm$core$Platform$Cmd$map, $author$project$Main$ListPageMsg, updatedCmd));
+					} else {
+						break _v0$4;
+					}
+				case 'DashboardPageMsg':
+					if (_v0.b.$ === 'DashboardPage') {
+						var subMsg = _v0.a.a;
+						var pageModel = _v0.b.a;
+						var _v2 = A2($author$project$Page$DashboardPage$update, subMsg, pageModel);
+						var updatedPageModel = _v2.a;
+						var updatedCmd = _v2.b;
+						return _Utils_Tuple2(
+							_Utils_update(
+								model,
+								{
+									page: $author$project$Main$DashboardPage(updatedPageModel)
+								}),
+							A2($elm$core$Platform$Cmd$map, $author$project$Main$DashboardPageMsg, updatedCmd));
+					} else {
+						break _v0$4;
+					}
+				case 'LinkClicked':
+					var urlRequest = _v0.a.a;
+					if (urlRequest.$ === 'Internal') {
+						var url = urlRequest.a;
+						return _Utils_Tuple2(
 							model,
-							{
-								page: $author$project$Main$ListPage(updatedPageModel)
-							}),
-						A2($elm$core$Platform$Cmd$map, $author$project$Main$ListPageMsg, updatedCmd));
-				} else {
-					return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
-				}
-			case 'LinkClicked':
-				var urlRequest = _v0.a.a;
-				if (urlRequest.$ === 'Internal') {
-					var url = urlRequest.a;
-					return _Utils_Tuple2(
-						model,
-						A2(
-							$elm$browser$Browser$Navigation$pushUrl,
-							model.navKey,
-							$elm$url$Url$toString(url)));
-				} else {
-					var url = urlRequest.a;
-					return _Utils_Tuple2(
-						model,
-						$elm$browser$Browser$Navigation$load(url));
-				}
-			default:
-				var url = _v0.a.a;
-				var newRoute = $author$project$Route$parseUrl(url);
-				return $author$project$Main$initCurrentPage(
-					_Utils_Tuple2(
-						_Utils_update(
+							A2(
+								$elm$browser$Browser$Navigation$pushUrl,
+								model.navKey,
+								$elm$url$Url$toString(url)));
+					} else {
+						var url = urlRequest.a;
+						return _Utils_Tuple2(
 							model,
-							{route: newRoute}),
-						$elm$core$Platform$Cmd$none));
+							$elm$browser$Browser$Navigation$load(url));
+					}
+				default:
+					var url = _v0.a.a;
+					var newRoute = $author$project$Route$parseUrl(url);
+					return $author$project$Main$initCurrentPage(
+						_Utils_Tuple2(
+							_Utils_update(
+								model,
+								{route: newRoute}),
+							$elm$core$Platform$Cmd$none));
+			}
 		}
+		return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 	});
 var $elm$virtual_dom$VirtualDom$map = _VirtualDom_map;
 var $elm$html$Html$map = $elm$virtual_dom$VirtualDom$map;
@@ -7266,9 +7350,127 @@ var $author$project$Main$notFoundView = A2(
 		[
 			$elm$html$Html$text('Oops! The page you requested was not found!')
 		]));
+var $elm$html$Html$div = _VirtualDom_node('div');
+var $elm$html$Html$ul = _VirtualDom_node('ul');
+var $author$project$Page$DashboardPage$viewFetchError = function (errorMessage) {
+	var errorHeading = 'Couldn\'t fetch dashboard at this time.';
+	return A2(
+		$elm$html$Html$div,
+		_List_Nil,
+		_List_fromArray(
+			[
+				A2(
+				$elm$html$Html$h3,
+				_List_Nil,
+				_List_fromArray(
+					[
+						$elm$html$Html$text(errorHeading)
+					])),
+				$elm$html$Html$text('Error: ' + errorMessage)
+			]));
+};
+var $elm$core$String$fromFloat = _String_fromNumber;
+var $author$project$Page$DashboardPage$viewPieSection = function (pieSection) {
+	return A2(
+		$elm$html$Html$div,
+		_List_Nil,
+		_List_fromArray(
+			[
+				A2(
+				$elm$html$Html$h3,
+				_List_Nil,
+				_List_fromArray(
+					[
+						$elm$html$Html$text(pieSection.title)
+					])),
+				$elm$html$Html$text(
+				$elm$core$String$fromFloat(pieSection.percentage))
+			]));
+};
+var $author$project$Page$DashboardPage$viewWidget = function (widget) {
+	if (widget.$ === 'Pie') {
+		var pie = widget.a;
+		return A2(
+			$elm$html$Html$div,
+			_List_Nil,
+			_List_fromArray(
+				[
+					A2(
+					$elm$html$Html$h3,
+					_List_Nil,
+					_List_fromArray(
+						[
+							$elm$html$Html$text(pie.title)
+						])),
+					$elm$html$Html$text(pie.table),
+					$elm$html$Html$text(pie.x_column),
+					A2(
+					$elm$html$Html$ul,
+					_List_Nil,
+					A2(
+						$elm$core$List$map,
+						$author$project$Page$DashboardPage$viewPieSection,
+						A2($elm$core$Maybe$withDefault, _List_Nil, pie.sections)))
+				]));
+	} else {
+		return $elm$html$Html$text('Unknown widget type');
+	}
+};
+var $author$project$Page$DashboardPage$viewDashboard = function (dashboard) {
+	switch (dashboard.$) {
+		case 'NotAsked':
+			return $elm$html$Html$text('');
+		case 'Loading':
+			return A2(
+				$elm$html$Html$h3,
+				_List_Nil,
+				_List_fromArray(
+					[
+						$elm$html$Html$text('Loading Dashboard...')
+					]));
+		case 'Success':
+			var dashboardData = dashboard.a;
+			return A2(
+				$elm$html$Html$div,
+				_List_Nil,
+				_List_fromArray(
+					[
+						A2(
+						$elm$html$Html$h3,
+						_List_Nil,
+						_List_fromArray(
+							[
+								$elm$html$Html$text(dashboardData.title)
+							])),
+						A2(
+						$elm$html$Html$ul,
+						_List_Nil,
+						A2($elm$core$List$map, $author$project$Page$DashboardPage$viewWidget, dashboardData.widgets))
+					]));
+		default:
+			var httpError = dashboard.a;
+			return $author$project$Page$DashboardPage$viewFetchError(
+				$author$project$Error$buildErrorMessage(httpError));
+	}
+};
+var $author$project$Page$DashboardPage$view = function (model) {
+	return A2(
+		$elm$html$Html$div,
+		_List_Nil,
+		_List_fromArray(
+			[
+				A2(
+				$elm$html$Html$h3,
+				_List_Nil,
+				_List_fromArray(
+					[
+						$elm$html$Html$text('Widgets')
+					])),
+				$author$project$Page$DashboardPage$viewDashboard(model.dashboard)
+			]));
+};
 var $author$project$Page$ListDashboards$FetchDashboards = {$: 'FetchDashboards'};
 var $elm$html$Html$button = _VirtualDom_node('button');
-var $elm$html$Html$div = _VirtualDom_node('div');
 var $elm$html$Html$Attributes$stringProperty = F2(
 	function (key, string) {
 		return A2(
@@ -7338,11 +7540,6 @@ var $author$project$Page$ListDashboards$UpdateTitle = function (a) {
 var $author$project$Page$ListDashboards$UpdateUsername = function (a) {
 	return {$: 'UpdateUsername', a: a};
 };
-var $elm$core$Basics$composeL = F3(
-	function (g, f, x) {
-		return g(
-			f(x));
-	});
 var $elm$html$Html$input = _VirtualDom_node('input');
 var $elm$html$Html$label = _VirtualDom_node('label');
 var $elm$html$Html$Events$alwaysStop = function (x) {
@@ -7600,6 +7797,9 @@ var $elm$html$Html$table = _VirtualDom_node('table');
 var $author$project$Page$ListDashboards$DeleteDashboard = function (a) {
 	return {$: 'DeleteDashboard', a: a};
 };
+var $author$project$Page$ListDashboards$GoToDashboard = function (a) {
+	return {$: 'GoToDashboard', a: a};
+};
 var $elm$html$Html$td = _VirtualDom_node('td');
 var $elm$html$Html$tr = _VirtualDom_node('tr');
 var $author$project$Page$ListDashboards$viewDashboard = function (dashboard) {
@@ -7610,7 +7810,12 @@ var $author$project$Page$ListDashboards$viewDashboard = function (dashboard) {
 			[
 				A2(
 				$elm$html$Html$td,
-				_List_Nil,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$class('dashboard-square'),
+						$elm$html$Html$Events$onClick(
+						$author$project$Page$ListDashboards$GoToDashboard(dashboard.dashboard_id))
+					]),
 				_List_fromArray(
 					[
 						$elm$html$Html$text(dashboard.title)
@@ -7746,14 +7951,21 @@ var $author$project$Page$ListDashboards$view = function (model) {
 };
 var $author$project$Main$currentView = function (model) {
 	var _v0 = model.page;
-	if (_v0.$ === 'NotFoundPage') {
-		return $author$project$Main$notFoundView;
-	} else {
-		var pageModel = _v0.a;
-		return A2(
-			$elm$html$Html$map,
-			$author$project$Main$ListPageMsg,
-			$author$project$Page$ListDashboards$view(pageModel));
+	switch (_v0.$) {
+		case 'NotFoundPage':
+			return $author$project$Main$notFoundView;
+		case 'ListPage':
+			var pageModel = _v0.a;
+			return A2(
+				$elm$html$Html$map,
+				$author$project$Main$ListPageMsg,
+				$author$project$Page$ListDashboards$view(pageModel));
+		default:
+			var pageModel = _v0.a;
+			return A2(
+				$elm$html$Html$map,
+				$author$project$Main$DashboardPageMsg,
+				$author$project$Page$DashboardPage$view(pageModel));
 	}
 };
 var $author$project$Main$view = function (model) {
