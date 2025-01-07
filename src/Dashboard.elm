@@ -1,13 +1,82 @@
-module Decoders exposing (..)
+module Dashboard exposing (..)
 
-import Json.Decode exposing (Decoder, field, int, string, nullable, list, map2, map4, map5, float, andThen)
+import Json.Decode exposing (Decoder, field, int, string, nullable, list, map2, map4, map5, float, andThen, map)
 import Json.Encode exposing (Value)
-import Types exposing (..)
+import Url.Parser exposing (Parser, custom)
+
+type alias PieSection = 
+  { title : String
+  , percentage : Float
+  }
+
+type alias Bin = 
+  { range : {
+    left : Maybe Float
+    , right : Maybe Float
+  }
+  , value : Float
+ }
+
+type Widget 
+  = Pie { title: String, table: String, x_column : String , sections : Maybe (List PieSection) }
+  | Histogram { title: String, table: String,  x_column : String , sections : Maybe (List Bin) }
+
+
+type alias DataSource = 
+  { host : String
+  , portNumber : Int
+  , username : String
+  , password : String
+  , database : String
+  }
+
+type DashboardId 
+  = DashboardId Int
+
+type alias Dashboard = 
+  { dashboard_id : DashboardId
+  , title : String
+  , widgets : List Widget
+  , dataSource : DataSource
+  }
+
+type alias TableColumn = 
+  { name : String
+  , dataType : String
+  }
+
+type alias Table = 
+  {
+    name : String
+    , columns : List TableColumn
+  }
+
+idToString : DashboardId -> String
+idToString (DashboardId id) = 
+  String.fromInt id
+
+idDecoder : Decoder DashboardId
+idDecoder = 
+  map DashboardId int
+
+idEncoder : DashboardId -> Value
+idEncoder (DashboardId id) = 
+  Json.Encode.int id
+
+idParser : Parser (DashboardId -> a) a
+idParser = 
+  custom "DASHBOARDID" <|
+    \dashboardId ->
+      Maybe.map DashboardId (String.toInt dashboardId)
+
+dashboardsDecoder : Decoder (List Dashboard)
+dashboardsDecoder =
+  list dashboardDecoder
 
 dashboardDecoder : Decoder Dashboard
 dashboardDecoder =
   map4 Dashboard
-    (field "dashboard_id" int)
+    (field "dashboard_id" idDecoder)
     (field "title" string)
     (field "widgets" (list widgetDecoder))
     (field "dataSource" (dataSourceDecoder))
@@ -85,11 +154,12 @@ dataSourceDecoder =
 dashboardEncoder : Dashboard -> Value
 dashboardEncoder dashboard =
   Json.Encode.object
-    [ ("dashboard_id", Json.Encode.int dashboard.dashboard_id)
+    [ ("dashboard_id", idEncoder dashboard.dashboard_id)
     , ("title", Json.Encode.string dashboard.title)
     , ("widgets", Json.Encode.list widgetEncoder dashboard.widgets)
     , ("dataSource", dataSourceEncoder dashboard.dataSource)
     ]
+  
 
 widgetEncoder : Widget -> Value
 widgetEncoder widget =
