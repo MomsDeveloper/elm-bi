@@ -1,26 +1,22 @@
 module Dashboard exposing (..)
 
-import Json.Decode exposing (Decoder, field, int, string, nullable, list, map2, map4, map5, float, andThen, map)
+import Json.Decode exposing (Decoder, field, int, string, nullable, list, map2, map4, map5, float, andThen, map, map3)
 import Json.Encode exposing (Value)
 import Url.Parser exposing (Parser, custom)
 
-type alias PieSection = 
-  { title : String
-  , percentage : Float
+type alias Dashboard = 
+  { dashboard_id : DashboardId
+  , title : String
+  , widgets : List Widget
+  , dataSource : DataSource
   }
 
-type alias Bin = 
-  { range : {
-    left : Maybe Float
-    , right : Maybe Float
-  }
-  , value : Float
- }
+type DashboardId 
+  = DashboardId Int
 
 type Widget 
-  = Pie { title: String, table: String, x_column : String , sections : Maybe (List PieSection) }
-  | Histogram { title: String, table: String,  x_column : String , sections : Maybe (List Bin) }
-
+  = Pie { widget_id : Int, title: String, table: String, data_column : String }
+  | Histogram { widget_id : Int, title: String, table: String,  data_column : String }
 
 type alias DataSource = 
   { host : String
@@ -30,26 +26,17 @@ type alias DataSource =
   , database : String
   }
 
-type DashboardId 
-  = DashboardId Int
+dashboardsDecoder : Decoder (List Dashboard)
+dashboardsDecoder =
+  list dashboardDecoder
 
-type alias Dashboard = 
-  { dashboard_id : DashboardId
-  , title : String
-  , widgets : List Widget
-  , dataSource : DataSource
-  }
-
-type alias TableColumn = 
-  { name : String
-  , dataType : String
-  }
-
-type alias Table = 
-  {
-    name : String
-    , columns : List TableColumn
-  }
+dashboardDecoder : Decoder Dashboard
+dashboardDecoder =
+  map4 Dashboard
+    (field "dashboard_id" idDecoder)
+    (field "title" string)
+    (field "widgets" (list widgetDecoder))
+    (field "dataSource" (dataSourceDecoder))
 
 idToString : DashboardId -> String
 idToString (DashboardId id) = 
@@ -69,18 +56,6 @@ idParser =
     \dashboardId ->
       Maybe.map DashboardId (String.toInt dashboardId)
 
-dashboardsDecoder : Decoder (List Dashboard)
-dashboardsDecoder =
-  list dashboardDecoder
-
-dashboardDecoder : Decoder Dashboard
-dashboardDecoder =
-  map4 Dashboard
-    (field "dashboard_id" idDecoder)
-    (field "title" string)
-    (field "widgets" (list widgetDecoder))
-    (field "dataSource" (dataSourceDecoder))
-
 
 widgetDecoder : Decoder Widget
 widgetDecoder =
@@ -90,55 +65,37 @@ widgetDecoder =
           case widget_type of
             "PieChart" ->
               Json.Decode.map Pie
-                (map4 (\title table x_column sections ->
-                    { title = title
+                (map4 (\widget_id title table data_column ->
+                    { widget_id = widget_id 
+                    , title = title
                     , table = table
-                    , x_column = x_column
-                    , sections = sections
+                    , data_column = data_column
                     }
                  )
+                 (field "widget_id" int)
                  (field "title" string)
                  (field "table" string)
-                 (field "x_column" string)
-                 (field "sections" (nullable (list pieSectionDecoder)))
+                 (field "data_column" string)
                 )
                 
             "Histogram" ->
               Json.Decode.map Histogram
-                (map4 (\title table x_column bins ->
-                    { title = title
+                (map4 (\widget_id title table data_column ->
+                    { widget_id = widget_id
+                    , title = title
                     , table = table
-                    , x_column = x_column
-                    , sections = bins
+                    , data_column = data_column
                     }
                  )
+                 (field "widget_id" int)
                  (field "title" string)
                  (field "table" string)
-                 (field "x_column" string)
-                 (field "bins" (nullable (list binDecoder)))
+                 (field "data_column" string)
                 )
         
             _ ->
               Json.Decode.fail ("Unknown widget type: " ++ widget_type)
         )
-
-
-pieSectionDecoder : Decoder PieSection
-pieSectionDecoder =
-  map2 PieSection
-    (field "title" string)
-    (field "percentage" float)
-
-binDecoder : Decoder Bin
-binDecoder =
-  map2 Bin
-    (field "range"
-      (map2 (\left right -> { left = left, right = right })
-        (field "left" (nullable float))
-        (field "right" (nullable float))
-      )
-    )
-    (field "value" float)
 
 
 dataSourceDecoder : Decoder DataSource
@@ -164,53 +121,25 @@ dashboardEncoder dashboard =
 widgetEncoder : Widget -> Value
 widgetEncoder widget =
   case widget of
-    Pie { title, table, x_column, sections } ->
+    Pie { widget_id, title, table, data_column } ->
       Json.Encode.object
         [ ("widget_type", Json.Encode.string "PieChart")
+        , ("widget_id", Json.Encode.int widget_id)
         , ("title", Json.Encode.string title)
         , ("table", Json.Encode.string table)
-        , ("x_column", Json.Encode.string x_column)
-        , ("sections", case sections of
-            Nothing -> Json.Encode.null
-            Just s -> Json.Encode.list pieSectionEncoder s
-          )
+        , ("data_column", Json.Encode.string data_column)
+
         ]
         
-    Histogram { title, table, x_column, sections } ->
+    Histogram { widget_id, title, table, data_column } ->
       Json.Encode.object
         [ ("widget_type", Json.Encode.string "Histogram")
+        , ("widget_id", Json.Encode.int widget_id)
         , ("title", Json.Encode.string title)
         , ("table", Json.Encode.string table)
-        , ("x_column", Json.Encode.string x_column)
-        , ("bins", case sections of
-            Nothing -> Json.Encode.null
-            Just s -> Json.Encode.list binEncoder s
-          )
+        , ("data_column", Json.Encode.string data_column)
         ]
         
-pieSectionEncoder : PieSection -> Value
-pieSectionEncoder pieSection =
-  Json.Encode.object
-    [ ("title", Json.Encode.string pieSection.title)
-    , ("percentage", Json.Encode.float pieSection.percentage)
-    ]
-
-binEncoder : Bin -> Value
-binEncoder bin =
-  Json.Encode.object
-    [ ("range", Json.Encode.object
-        [ ("left", case bin.range.left of
-            Nothing -> Json.Encode.null
-            Just value -> Json.Encode.float value
-          )
-        , ("right", case bin.range.right of
-            Nothing -> Json.Encode.null
-            Just value -> Json.Encode.float value
-          )
-        ]
-      )
-    , ("value", Json.Encode.float bin.value)
-    ]
 
 dataSourceEncoder : DataSource -> Value
 dataSourceEncoder dataSource =
@@ -222,15 +151,21 @@ dataSourceEncoder dataSource =
     , ("database", Json.Encode.string dataSource.database)
     ]
 
-tableDecoder : Decoder Table
-tableDecoder =
-  map2 Table
-    (field "name" string)
-    (field "columns" (list tableColumnDecoder))
+type WidgetData 
+    = Piedata (List PieData)
+    | Histogramdata (List Float)
 
-  
-tableColumnDecoder : Decoder TableColumn
-tableColumnDecoder =
-  map2 TableColumn
-    (field "name" string)
-    (field "dataType" string)
+type alias PieData =
+    { title : String
+    , count : Int
+    }
+
+
+pieDataDecoder : Decoder (List PieData)
+pieDataDecoder =
+    field "data" (list (map2 PieData (field "title" string) (field "count" int)))
+
+
+histogramDataDecoder : Decoder (List Float)
+histogramDataDecoder =
+    field "data" (list float)

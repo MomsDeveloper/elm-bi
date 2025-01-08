@@ -8,8 +8,8 @@ import Html.Events exposing (..)
 import Browser.Navigation as Nav
 import Html.Attributes exposing (href, type_, class, rel)
 import Error exposing (buildErrorMessage)
-import Json.Encode 
 import Route
+import Json.Encode 
 
 
 type alias Model =

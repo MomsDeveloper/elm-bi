@@ -45,3 +45,14 @@
     justify-content: center;
     cursor: pointer;
 }
+
+.widget-square {
+    width: 400px;
+    height: 400px;
+    border: 1px solid black;
+    margin: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
