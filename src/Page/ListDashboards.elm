@@ -14,7 +14,7 @@ import Route
 
 type alias Model =
     { dashboards : WebData (List Dashboard)
-    , newDashboard : Maybe Dashboard
+    , newDashboard : Dashboard
     , showAddDashboardForm : Bool
     , deleteError : Maybe String
     , createError : Maybe String
@@ -45,7 +45,7 @@ init navKey =
 initialModel : Nav.Key -> Model
 initialModel navKey =
     { dashboards = RemoteData.NotAsked
-    , newDashboard = Nothing
+    , newDashboard = emptyDashboard
     , showAddDashboardForm = False
     , deleteError = Nothing
     , createError = Nothing
@@ -72,95 +72,55 @@ update msg model =
 
         UpdatePassword password ->
             let
-                updateDashboard dashboard =
-                    let
-                        dataSource = dashboard.dataSource
-                        updatedDataSource = { dataSource | password = password }
-                    in
-                    { dashboard | dataSource = updatedDataSource }
-
-                updatedDashboard =
-                    model.newDashboard
-                        |> Maybe.withDefault emptyDashboard
-                        |> updateDashboard
+                dataSource = model.newDashboard.dataSource
+                oldDashboard = model.newDashboard
+                updatedDataSource = { dataSource | password = password }
+                updatedDashboard = { oldDashboard | dataSource = updatedDataSource }
             in
-            ( { model | newDashboard = Just updatedDashboard }, Cmd.none )
+            ( { model | newDashboard = updatedDashboard }, Cmd.none )
         
         UpdateUsername username ->
             let
-                updateDashboard dashboard =
-                    let
-                        dataSource = dashboard.dataSource
-                        updatedDataSource = { dataSource | username = username }
-                    in
-                    { dashboard | dataSource = updatedDataSource }
-
-                updatedDashboard =
-                    model.newDashboard
-                        |> Maybe.withDefault emptyDashboard
-                        |> updateDashboard
+                dataSource = model.newDashboard.dataSource
+                oldDashboard = model.newDashboard
+                updatedDataSource = { dataSource | username = username }
+                updatedDashboard = { oldDashboard | dataSource = updatedDataSource }
             in
-            ( { model | newDashboard = Just updatedDashboard }, Cmd.none )
+            ( { model | newDashboard = updatedDashboard }, Cmd.none )
 
         UpdateHost host ->
             let
-                updateDashboard dashboard =
-                    let
-                        dataSource = dashboard.dataSource
-                        updatedDataSource = { dataSource | host = host }
-                    in
-                    { dashboard | dataSource = updatedDataSource }
-
-                updatedDashboard =
-                    model.newDashboard
-                        |> Maybe.withDefault emptyDashboard
-                        |> updateDashboard
+                dataSource = model.newDashboard.dataSource
+                oldDashboard = model.newDashboard
+                updatedDataSource = { dataSource | host = host }
+                updatedDashboard = { oldDashboard | dataSource = updatedDataSource }
             in
-            ( { model | newDashboard = Just updatedDashboard }, Cmd.none )
+            ( { model | newDashboard = updatedDashboard }, Cmd.none )
 
         UpdatePortNumber portNumber ->
             let
-                updateDashboard dashboard =
-                    let
-                        dataSource = dashboard.dataSource
-                        updatedDataSource = { dataSource | portNumber = portNumber }
-                    in
-                    { dashboard | dataSource = updatedDataSource }
-
-                updatedDashboard =
-                    model.newDashboard
-                        |> Maybe.withDefault emptyDashboard
-                        |> updateDashboard
+                dataSource = model.newDashboard.dataSource
+                oldDashboard = model.newDashboard
+                updatedDataSource = { dataSource | portNumber = portNumber }
+                updatedDashboard = { oldDashboard | dataSource = updatedDataSource }
             in
-            ( { model | newDashboard = Just updatedDashboard }, Cmd.none )
+            ( { model | newDashboard = updatedDashboard }, Cmd.none )
 
         UpdateDatabase database ->
             let
-                updateDashboard dashboard =
-                    let
-                        dataSource = dashboard.dataSource
-                        updatedDataSource = { dataSource | database = database }
-                    in
-                    { dashboard | dataSource = updatedDataSource }
-
-                updatedDashboard =
-                    model.newDashboard
-                        |> Maybe.withDefault emptyDashboard
-                        |> updateDashboard
+                dataSource = model.newDashboard.dataSource
+                oldDashboard = model.newDashboard
+                updatedDataSource = { dataSource | database = database }
+                updatedDashboard = { oldDashboard | dataSource = updatedDataSource }
             in
-            ( { model | newDashboard = Just updatedDashboard }, Cmd.none )
+            ( { model | newDashboard = updatedDashboard }, Cmd.none )
 
         UpdateTitle title ->
             let
-                updateDashboard dashboard =
-                    { dashboard | title = title }
-
-                updatedDashboard =
-                    model.newDashboard
-                        |> Maybe.withDefault emptyDashboard
-                        |> updateDashboard
+                oldDashboard = model.newDashboard
+                updatedDashboard = { oldDashboard | title = title }
             in
-            ( { model | newDashboard = Just updatedDashboard }, Cmd.none )
+            ( { model | newDashboard = updatedDashboard }, Cmd.none )
         
         ShowForm ->
             ( { model | showAddDashboardForm = True }, Cmd.none )
@@ -169,11 +129,7 @@ update msg model =
             ( { model | showAddDashboardForm = False }, Cmd.none )
 
         AddNewDashboard ->
-            case model.newDashboard of
-                Just dashboard ->
-                    ( model, create_dashboard dashboard )
-                Nothing ->
-                    ( model, Cmd.none )
+            ( model, create_dashboard model.newDashboard )
         
         DashboardCreated (Ok dashboard) ->
             ( model, Route.pushUrl (Route.Dashboard dashboard.dashboard_id) model.navKey )

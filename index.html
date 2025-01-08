@@ -6395,8 +6395,17 @@ var $author$project$Page$ListDashboards$fetchDashboards = $elm$http$Http$post(
 		url: 'http://127.0.0.1:6969/get-dashboards'
 	});
 var $krisajenkins$remotedata$RemoteData$NotAsked = {$: 'NotAsked'};
+var $elm$core$Basics$negate = function (n) {
+	return -n;
+};
+var $author$project$Page$ListDashboards$emptyDashboard = {
+	dashboard_id: $author$project$Dashboard$DashboardId(-1),
+	dataSource: {database: '', host: '', password: '', portNumber: 0, username: ''},
+	title: '',
+	widgets: _List_Nil
+};
 var $author$project$Page$ListDashboards$initialModel = function (navKey) {
-	return {createError: $elm$core$Maybe$Nothing, dashboards: $krisajenkins$remotedata$RemoteData$NotAsked, deleteError: $elm$core$Maybe$Nothing, navKey: navKey, newDashboard: $elm$core$Maybe$Nothing, showAddDashboardForm: false};
+	return {createError: $elm$core$Maybe$Nothing, dashboards: $krisajenkins$remotedata$RemoteData$NotAsked, deleteError: $elm$core$Maybe$Nothing, navKey: navKey, newDashboard: $author$project$Page$ListDashboards$emptyDashboard, showAddDashboardForm: false};
 };
 var $author$project$Page$ListDashboards$init = function (navKey) {
 	return _Utils_Tuple2(
@@ -7026,15 +7035,6 @@ var $author$project$Page$ListDashboards$deleteDashboard = function (dashboardId)
 			url: 'http://127.0.0.1:6969/delete-dashboard'
 		});
 };
-var $elm$core$Basics$negate = function (n) {
-	return -n;
-};
-var $author$project$Page$ListDashboards$emptyDashboard = {
-	dashboard_id: $author$project$Dashboard$DashboardId(-1),
-	dataSource: {database: '', host: '', password: '', portNumber: 0, username: ''},
-	title: '',
-	widgets: _List_Nil
-};
 var $author$project$Dashboard$idToString = function (_v0) {
 	var id = _v0.a;
 	return $elm$core$String$fromInt(id);
@@ -7056,15 +7056,6 @@ var $author$project$Route$pushUrl = F2(
 			$elm$browser$Browser$Navigation$pushUrl,
 			navKey,
 			$author$project$Route$routeToString(route));
-	});
-var $elm$core$Maybe$withDefault = F2(
-	function (_default, maybe) {
-		if (maybe.$ === 'Just') {
-			var value = maybe.a;
-			return value;
-		} else {
-			return _default;
-		}
 	});
 var $author$project$Page$ListDashboards$update = F2(
 	function (msg, model) {
@@ -7103,119 +7094,89 @@ var $author$project$Page$ListDashboards$update = F2(
 				}
 			case 'UpdatePassword':
 				var password = msg.a;
-				var updateDashboard = function (dashboard) {
-					var dataSource = dashboard.dataSource;
-					var updatedDataSource = _Utils_update(
-						dataSource,
-						{password: password});
-					return _Utils_update(
-						dashboard,
-						{dataSource: updatedDataSource});
-				};
-				var updatedDashboard = updateDashboard(
-					A2($elm$core$Maybe$withDefault, $author$project$Page$ListDashboards$emptyDashboard, model.newDashboard));
+				var oldDashboard = model.newDashboard;
+				var dataSource = model.newDashboard.dataSource;
+				var updatedDataSource = _Utils_update(
+					dataSource,
+					{password: password});
+				var updatedDashboard = _Utils_update(
+					oldDashboard,
+					{dataSource: updatedDataSource});
 				return _Utils_Tuple2(
 					_Utils_update(
 						model,
-						{
-							newDashboard: $elm$core$Maybe$Just(updatedDashboard)
-						}),
+						{newDashboard: updatedDashboard}),
 					$elm$core$Platform$Cmd$none);
 			case 'UpdateUsername':
 				var username = msg.a;
-				var updateDashboard = function (dashboard) {
-					var dataSource = dashboard.dataSource;
-					var updatedDataSource = _Utils_update(
-						dataSource,
-						{username: username});
-					return _Utils_update(
-						dashboard,
-						{dataSource: updatedDataSource});
-				};
-				var updatedDashboard = updateDashboard(
-					A2($elm$core$Maybe$withDefault, $author$project$Page$ListDashboards$emptyDashboard, model.newDashboard));
+				var oldDashboard = model.newDashboard;
+				var dataSource = model.newDashboard.dataSource;
+				var updatedDataSource = _Utils_update(
+					dataSource,
+					{username: username});
+				var updatedDashboard = _Utils_update(
+					oldDashboard,
+					{dataSource: updatedDataSource});
 				return _Utils_Tuple2(
 					_Utils_update(
 						model,
-						{
-							newDashboard: $elm$core$Maybe$Just(updatedDashboard)
-						}),
+						{newDashboard: updatedDashboard}),
 					$elm$core$Platform$Cmd$none);
 			case 'UpdateHost':
 				var host = msg.a;
-				var updateDashboard = function (dashboard) {
-					var dataSource = dashboard.dataSource;
-					var updatedDataSource = _Utils_update(
-						dataSource,
-						{host: host});
-					return _Utils_update(
-						dashboard,
-						{dataSource: updatedDataSource});
-				};
-				var updatedDashboard = updateDashboard(
-					A2($elm$core$Maybe$withDefault, $author$project$Page$ListDashboards$emptyDashboard, model.newDashboard));
+				var oldDashboard = model.newDashboard;
+				var dataSource = model.newDashboard.dataSource;
+				var updatedDataSource = _Utils_update(
+					dataSource,
+					{host: host});
+				var updatedDashboard = _Utils_update(
+					oldDashboard,
+					{dataSource: updatedDataSource});
 				return _Utils_Tuple2(
 					_Utils_update(
 						model,
-						{
-							newDashboard: $elm$core$Maybe$Just(updatedDashboard)
-						}),
+						{newDashboard: updatedDashboard}),
 					$elm$core$Platform$Cmd$none);
 			case 'UpdatePortNumber':
 				var portNumber = msg.a;
-				var updateDashboard = function (dashboard) {
-					var dataSource = dashboard.dataSource;
-					var updatedDataSource = _Utils_update(
-						dataSource,
-						{portNumber: portNumber});
-					return _Utils_update(
-						dashboard,
-						{dataSource: updatedDataSource});
-				};
-				var updatedDashboard = updateDashboard(
-					A2($elm$core$Maybe$withDefault, $author$project$Page$ListDashboards$emptyDashboard, model.newDashboard));
+				var oldDashboard = model.newDashboard;
+				var dataSource = model.newDashboard.dataSource;
+				var updatedDataSource = _Utils_update(
+					dataSource,
+					{portNumber: portNumber});
+				var updatedDashboard = _Utils_update(
+					oldDashboard,
+					{dataSource: updatedDataSource});
 				return _Utils_Tuple2(
 					_Utils_update(
 						model,
-						{
-							newDashboard: $elm$core$Maybe$Just(updatedDashboard)
-						}),
+						{newDashboard: updatedDashboard}),
 					$elm$core$Platform$Cmd$none);
 			case 'UpdateDatabase':
 				var database = msg.a;
-				var updateDashboard = function (dashboard) {
-					var dataSource = dashboard.dataSource;
-					var updatedDataSource = _Utils_update(
-						dataSource,
-						{database: database});
-					return _Utils_update(
-						dashboard,
-						{dataSource: updatedDataSource});
-				};
-				var updatedDashboard = updateDashboard(
-					A2($elm$core$Maybe$withDefault, $author$project$Page$ListDashboards$emptyDashboard, model.newDashboard));
+				var oldDashboard = model.newDashboard;
+				var dataSource = model.newDashboard.dataSource;
+				var updatedDataSource = _Utils_update(
+					dataSource,
+					{database: database});
+				var updatedDashboard = _Utils_update(
+					oldDashboard,
+					{dataSource: updatedDataSource});
 				return _Utils_Tuple2(
 					_Utils_update(
 						model,
-						{
-							newDashboard: $elm$core$Maybe$Just(updatedDashboard)
-						}),
+						{newDashboard: updatedDashboard}),
 					$elm$core$Platform$Cmd$none);
 			case 'UpdateTitle':
 				var title = msg.a;
-				var updateDashboard = function (dashboard) {
-					return _Utils_update(
-						dashboard,
-						{title: title});
-				};
-				var updatedDashboard = updateDashboard(
-					A2($elm$core$Maybe$withDefault, $author$project$Page$ListDashboards$emptyDashboard, model.newDashboard));
+				var oldDashboard = model.newDashboard;
+				var updatedDashboard = _Utils_update(
+					oldDashboard,
+					{title: title});
 				return _Utils_Tuple2(
 					_Utils_update(
 						model,
-						{
-							newDashboard: $elm$core$Maybe$Just(updatedDashboard)
-						}),
+						{newDashboard: updatedDashboard}),
 					$elm$core$Platform$Cmd$none);
 			case 'ShowForm':
 				return _Utils_Tuple2(
@@ -7230,15 +7191,9 @@ var $author$project$Page$ListDashboards$update = F2(
 						{showAddDashboardForm: false}),
 					$elm$core$Platform$Cmd$none);
 			case 'AddNewDashboard':
-				var _v1 = model.newDashboard;
-				if (_v1.$ === 'Just') {
-					var dashboard = _v1.a;
-					return _Utils_Tuple2(
-						model,
-						$author$project$Page$ListDashboards$create_dashboard(dashboard));
-				} else {
-					return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
-				}
+				return _Utils_Tuple2(
+					model,
+					$author$project$Page$ListDashboards$create_dashboard(model.newDashboard));
 			case 'DashboardCreated':
 				if (msg.a.$ === 'Ok') {
 					var dashboard = msg.a.a;
@@ -7387,6 +7342,15 @@ var $author$project$Page$DashboardPage$viewPieSection = function (pieSection) {
 				$elm$core$String$fromFloat(pieSection.percentage))
 			]));
 };
+var $elm$core$Maybe$withDefault = F2(
+	function (_default, maybe) {
+		if (maybe.$ === 'Just') {
+			var value = maybe.a;
+			return value;
+		} else {
+			return _default;
+		}
+	});
 var $author$project$Page$DashboardPage$viewWidget = function (widget) {
 	if (widget.$ === 'Pie') {
 		var pie = widget.a;
