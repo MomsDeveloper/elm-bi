@@ -6840,6 +6840,46 @@ var $author$project$Error$buildErrorMessage = function (httpError) {
 			return message;
 	}
 };
+var $author$project$Page$ListDashboards$DashboardDeleted = function (a) {
+	return {$: 'DashboardDeleted', a: a};
+};
+var $author$project$Page$ListDashboards$deleteDashboard = function (dashboardId) {
+	return $elm$http$Http$post(
+		{
+			body: $elm$http$Http$jsonBody(
+				$elm$json$Json$Encode$object(
+					_List_fromArray(
+						[
+							_Utils_Tuple2(
+							'dashboard_id',
+							$author$project$Dashboard$idEncoder(dashboardId))
+						]))),
+			expect: A2($elm$http$Http$expectJson, $author$project$Page$ListDashboards$DashboardDeleted, $author$project$Dashboard$dashboardsDecoder),
+			url: 'http://127.0.0.1:6969/delete-dashboard'
+		});
+};
+var $author$project$Dashboard$idToString = function (_v0) {
+	var id = _v0.a;
+	return $elm$core$String$fromInt(id);
+};
+var $author$project$Route$routeToString = function (route) {
+	switch (route.$) {
+		case 'NotFound':
+			return '/not-found';
+		case 'Dashboards':
+			return '/dashboards';
+		default:
+			var dashboardId = route.a;
+			return '/dashboards/' + $author$project$Dashboard$idToString(dashboardId);
+	}
+};
+var $author$project$Route$pushUrl = F2(
+	function (route, navKey) {
+		return A2(
+			$elm$browser$Browser$Navigation$pushUrl,
+			navKey,
+			$author$project$Route$routeToString(route));
+	});
 var $author$project$Page$ListDashboards$DashboardCreated = function (a) {
 	return {$: 'DashboardCreated', a: a};
 };
@@ -7017,81 +7057,9 @@ var $author$project$Page$ListDashboards$create_dashboard = function (dashboard) 
 			url: 'http://127.0.0.1:6969/create-dashboard'
 		});
 };
-var $author$project$Page$ListDashboards$DashboardDeleted = function (a) {
-	return {$: 'DashboardDeleted', a: a};
-};
-var $author$project$Page$ListDashboards$deleteDashboard = function (dashboardId) {
-	return $elm$http$Http$post(
-		{
-			body: $elm$http$Http$jsonBody(
-				$elm$json$Json$Encode$object(
-					_List_fromArray(
-						[
-							_Utils_Tuple2(
-							'dashboard_id',
-							$author$project$Dashboard$idEncoder(dashboardId))
-						]))),
-			expect: A2($elm$http$Http$expectJson, $author$project$Page$ListDashboards$DashboardDeleted, $author$project$Dashboard$dashboardsDecoder),
-			url: 'http://127.0.0.1:6969/delete-dashboard'
-		});
-};
-var $author$project$Dashboard$idToString = function (_v0) {
-	var id = _v0.a;
-	return $elm$core$String$fromInt(id);
-};
-var $author$project$Route$routeToString = function (route) {
-	switch (route.$) {
-		case 'NotFound':
-			return '/not-found';
-		case 'Dashboards':
-			return '/dashboards';
-		default:
-			var dashboardId = route.a;
-			return '/dashboards/' + $author$project$Dashboard$idToString(dashboardId);
-	}
-};
-var $author$project$Route$pushUrl = F2(
-	function (route, navKey) {
-		return A2(
-			$elm$browser$Browser$Navigation$pushUrl,
-			navKey,
-			$author$project$Route$routeToString(route));
-	});
-var $author$project$Page$ListDashboards$update = F2(
+var $author$project$Page$ListDashboards$updateForm = F2(
 	function (msg, model) {
 		switch (msg.$) {
-			case 'FetchDashboards':
-				return _Utils_Tuple2(
-					_Utils_update(
-						model,
-						{dashboards: $krisajenkins$remotedata$RemoteData$Loading}),
-					$author$project$Page$ListDashboards$fetchDashboards);
-			case 'DashboardsReceived':
-				var response = msg.a;
-				return _Utils_Tuple2(
-					_Utils_update(
-						model,
-						{dashboards: response}),
-					$elm$core$Platform$Cmd$none);
-			case 'DeleteDashboard':
-				var dashboardId = msg.a;
-				return _Utils_Tuple2(
-					model,
-					$author$project$Page$ListDashboards$deleteDashboard(dashboardId));
-			case 'DashboardDeleted':
-				if (msg.a.$ === 'Ok') {
-					return _Utils_Tuple2(model, $author$project$Page$ListDashboards$fetchDashboards);
-				} else {
-					var httpError = msg.a.a;
-					return _Utils_Tuple2(
-						_Utils_update(
-							model,
-							{
-								deleteError: $elm$core$Maybe$Just(
-									$author$project$Error$buildErrorMessage(httpError))
-							}),
-						$elm$core$Platform$Cmd$none);
-				}
 			case 'UpdatePassword':
 				var password = msg.a;
 				var oldDashboard = model.newDashboard;
@@ -7178,22 +7146,62 @@ var $author$project$Page$ListDashboards$update = F2(
 						model,
 						{newDashboard: updatedDashboard}),
 					$elm$core$Platform$Cmd$none);
-			case 'ShowForm':
-				return _Utils_Tuple2(
-					_Utils_update(
-						model,
-						{showAddDashboardForm: true}),
-					$elm$core$Platform$Cmd$none);
 			case 'Cancel':
 				return _Utils_Tuple2(
 					_Utils_update(
 						model,
 						{showAddDashboardForm: false}),
 					$elm$core$Platform$Cmd$none);
-			case 'AddNewDashboard':
+			default:
 				return _Utils_Tuple2(
 					model,
 					$author$project$Page$ListDashboards$create_dashboard(model.newDashboard));
+		}
+	});
+var $author$project$Page$ListDashboards$update = F2(
+	function (msg, model) {
+		switch (msg.$) {
+			case 'FetchDashboards':
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{dashboards: $krisajenkins$remotedata$RemoteData$Loading}),
+					$author$project$Page$ListDashboards$fetchDashboards);
+			case 'DashboardsReceived':
+				var response = msg.a;
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{dashboards: response}),
+					$elm$core$Platform$Cmd$none);
+			case 'DeleteDashboard':
+				var dashboardId = msg.a;
+				return _Utils_Tuple2(
+					model,
+					$author$project$Page$ListDashboards$deleteDashboard(dashboardId));
+			case 'DashboardDeleted':
+				if (msg.a.$ === 'Ok') {
+					return _Utils_Tuple2(model, $author$project$Page$ListDashboards$fetchDashboards);
+				} else {
+					var httpError = msg.a.a;
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{
+								deleteError: $elm$core$Maybe$Just(
+									$author$project$Error$buildErrorMessage(httpError))
+							}),
+						$elm$core$Platform$Cmd$none);
+				}
+			case 'ShowForm':
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{showAddDashboardForm: true}),
+					$elm$core$Platform$Cmd$none);
+			case 'FormChanged':
+				var formMsg = msg.a;
+				return A2($author$project$Page$ListDashboards$updateForm, formMsg, model);
 			case 'DashboardCreated':
 				if (msg.a.$ === 'Ok') {
 					var dashboard = msg.a.a;
@@ -7486,6 +7494,9 @@ var $author$project$Page$ListDashboards$viewAddDashboardButton = A2(
 		]));
 var $author$project$Page$ListDashboards$AddNewDashboard = {$: 'AddNewDashboard'};
 var $author$project$Page$ListDashboards$Cancel = {$: 'Cancel'};
+var $author$project$Page$ListDashboards$FormChanged = function (a) {
+	return {$: 'FormChanged', a: a};
+};
 var $author$project$Page$ListDashboards$UpdateDatabase = function (a) {
 	return {$: 'UpdateDatabase', a: a};
 };
@@ -7574,7 +7585,8 @@ var $author$project$Page$ListDashboards$viewAddDashboardForm = A2(
 							_List_fromArray(
 								[
 									$elm$html$Html$Attributes$type_('password'),
-									$elm$html$Html$Events$onInput($author$project$Page$ListDashboards$UpdatePassword)
+									$elm$html$Html$Events$onInput(
+									A2($elm$core$Basics$composeL, $author$project$Page$ListDashboards$FormChanged, $author$project$Page$ListDashboards$UpdatePassword))
 								]),
 							_List_Nil)
 						])),
@@ -7598,7 +7610,8 @@ var $author$project$Page$ListDashboards$viewAddDashboardForm = A2(
 							_List_fromArray(
 								[
 									$elm$html$Html$Attributes$type_('text'),
-									$elm$html$Html$Events$onInput($author$project$Page$ListDashboards$UpdateUsername)
+									$elm$html$Html$Events$onInput(
+									A2($elm$core$Basics$composeL, $author$project$Page$ListDashboards$FormChanged, $author$project$Page$ListDashboards$UpdateUsername))
 								]),
 							_List_Nil)
 						])),
@@ -7622,7 +7635,8 @@ var $author$project$Page$ListDashboards$viewAddDashboardForm = A2(
 							_List_fromArray(
 								[
 									$elm$html$Html$Attributes$type_('text'),
-									$elm$html$Html$Events$onInput($author$project$Page$ListDashboards$UpdateHost)
+									$elm$html$Html$Events$onInput(
+									A2($elm$core$Basics$composeL, $author$project$Page$ListDashboards$FormChanged, $author$project$Page$ListDashboards$UpdateHost))
 								]),
 							_List_Nil)
 						])),
@@ -7651,7 +7665,7 @@ var $author$project$Page$ListDashboards$viewAddDashboardForm = A2(
 										$elm$core$Basics$composeL,
 										A2(
 											$elm$core$Basics$composeL,
-											$author$project$Page$ListDashboards$UpdatePortNumber,
+											A2($elm$core$Basics$composeL, $author$project$Page$ListDashboards$FormChanged, $author$project$Page$ListDashboards$UpdatePortNumber),
 											$elm$core$Maybe$withDefault(0)),
 										$elm$core$String$toInt))
 								]),
@@ -7677,7 +7691,8 @@ var $author$project$Page$ListDashboards$viewAddDashboardForm = A2(
 							_List_fromArray(
 								[
 									$elm$html$Html$Attributes$type_('text'),
-									$elm$html$Html$Events$onInput($author$project$Page$ListDashboards$UpdateDatabase)
+									$elm$html$Html$Events$onInput(
+									A2($elm$core$Basics$composeL, $author$project$Page$ListDashboards$FormChanged, $author$project$Page$ListDashboards$UpdateDatabase))
 								]),
 							_List_Nil)
 						])),
@@ -7701,7 +7716,8 @@ var $author$project$Page$ListDashboards$viewAddDashboardForm = A2(
 							_List_fromArray(
 								[
 									$elm$html$Html$Attributes$type_('text'),
-									$elm$html$Html$Events$onInput($author$project$Page$ListDashboards$UpdateTitle)
+									$elm$html$Html$Events$onInput(
+									A2($elm$core$Basics$composeL, $author$project$Page$ListDashboards$FormChanged, $author$project$Page$ListDashboards$UpdateTitle))
 								]),
 							_List_Nil)
 						])),
@@ -7717,7 +7733,8 @@ var $author$project$Page$ListDashboards$viewAddDashboardForm = A2(
 							$elm$html$Html$button,
 							_List_fromArray(
 								[
-									$elm$html$Html$Events$onClick($author$project$Page$ListDashboards$Cancel)
+									$elm$html$Html$Events$onClick(
+									$author$project$Page$ListDashboards$FormChanged($author$project$Page$ListDashboards$Cancel))
 								]),
 							_List_fromArray(
 								[
@@ -7727,7 +7744,8 @@ var $author$project$Page$ListDashboards$viewAddDashboardForm = A2(
 							$elm$html$Html$button,
 							_List_fromArray(
 								[
-									$elm$html$Html$Events$onClick($author$project$Page$ListDashboards$AddNewDashboard)
+									$elm$html$Html$Events$onClick(
+									$author$project$Page$ListDashboards$FormChanged($author$project$Page$ListDashboards$AddNewDashboard))
 								]),
 							_List_fromArray(
 								[

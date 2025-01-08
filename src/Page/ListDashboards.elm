@@ -26,17 +26,20 @@ type Msg
     | DashboardsReceived (WebData (List Dashboard))
     | DeleteDashboard DashboardId
     | DashboardDeleted (Result Http.Error (List Dashboard))
-    | UpdateTitle String
+    | ShowForm
+    | FormChanged FormMsg
+    | DashboardCreated (Result Http.Error Dashboard)
+    | GoToDashboard DashboardId
+
+type FormMsg 
+    = UpdateTitle String
     | UpdatePassword String
     | UpdateUsername String
     | UpdateHost String
     | UpdatePortNumber Int
     | UpdateDatabase String
-    | ShowForm
     | Cancel
     | AddNewDashboard
-    | DashboardCreated (Result Http.Error Dashboard)
-    | GoToDashboard DashboardId
 
 init : Nav.Key -> ( Model, Cmd Msg )
 init navKey =
@@ -69,7 +72,26 @@ update msg model =
 
         DashboardDeleted (Err httpError) ->
             ( { model | deleteError = Just (buildErrorMessage httpError) }, Cmd.none )
+        
+        DashboardCreated (Ok dashboard) ->
+            ( model, Route.pushUrl (Route.Dashboard dashboard.dashboard_id) model.navKey )
+        
+        ShowForm ->
+            ( { model | showAddDashboardForm = True }, Cmd.none )
 
+        FormChanged formMsg ->
+            updateForm formMsg model
+
+        DashboardCreated (Err httpError) ->
+            ( { model | createError = Just (buildErrorMessage httpError) }, Cmd.none )
+
+        GoToDashboard dashboardId ->
+            ( model, Route.pushUrl (Route.Dashboard dashboardId) model.navKey )
+            
+
+updateForm : FormMsg -> Model -> (Model, Cmd Msg) 
+updateForm msg model =
+    case msg of
         UpdatePassword password ->
             let
                 dataSource = model.newDashboard.dataSource
@@ -122,24 +144,11 @@ update msg model =
             in
             ( { model | newDashboard = updatedDashboard }, Cmd.none )
         
-        ShowForm ->
-            ( { model | showAddDashboardForm = True }, Cmd.none )
-    
         Cancel ->
             ( { model | showAddDashboardForm = False }, Cmd.none )
 
         AddNewDashboard ->
             ( model, create_dashboard model.newDashboard )
-        
-        DashboardCreated (Ok dashboard) ->
-            ( model, Route.pushUrl (Route.Dashboard dashboard.dashboard_id) model.navKey )
-        
-        DashboardCreated (Err httpError) ->
-            ( { model | createError = Just (buildErrorMessage httpError) }, Cmd.none )
-
-        GoToDashboard dashboardId ->
-            ( model, Route.pushUrl (Route.Dashboard dashboardId) model.navKey )
-            
 
 emptyDashboard : Dashboard
 emptyDashboard =
@@ -177,7 +186,7 @@ viewAddDashboardForm  =
                   [ label [] [ text "Password" ]
                   , input
                       [ type_ "password"
-                        , onInput UpdatePassword
+                        , onInput (FormChanged << UpdatePassword)
                         ]
                       []
                   ]
@@ -185,7 +194,7 @@ viewAddDashboardForm  =
                   [ label [] [ text "Username" ]
                   , input
                       [ type_ "text"
-                        , onInput UpdateUsername
+                        , onInput (FormChanged << UpdateUsername)
                         ]
                       []
                   ]
@@ -193,7 +202,7 @@ viewAddDashboardForm  =
                   [ label [] [ text "Host" ]
                   , input
                       [ type_ "text"
-                        , onInput UpdateHost
+                        , onInput (FormChanged << UpdateHost)
                         ]
                       []
                   ]
@@ -201,7 +210,7 @@ viewAddDashboardForm  =
                   [ label [] [ text "Port" ]
                   , input
                       [ type_ "number"
-                        , onInput (UpdatePortNumber << Maybe.withDefault 0 << String.toInt)
+                        , onInput ((FormChanged << UpdatePortNumber) << Maybe.withDefault 0 << String.toInt)
                         ]
                       []
                   ]
@@ -209,7 +218,7 @@ viewAddDashboardForm  =
                   [ label [] [ text "Database" ]
                   , input
                       [ type_ "text"
-                        , onInput UpdateDatabase
+                        , onInput (FormChanged << UpdateDatabase)
                         ]
                       []
                   ]
@@ -217,13 +226,13 @@ viewAddDashboardForm  =
                   [ label [] [ text "Dashboard Title" ]
                   , input
                       [ type_ "text"
-                        , onInput UpdateTitle
+                        , onInput (FormChanged << UpdateTitle)
                         ]
                       []
                   ]
               , div [ class "form-buttons" ]
-                  [ button [ onClick Cancel ] [ text "Cancel" ]
-                  , button [ onClick AddNewDashboard ] [ text "Create" ]
+                  [ button [ onClick (FormChanged Cancel) ] [ text "Cancel" ]
+                  , button [ onClick (FormChanged AddNewDashboard) ] [ text "Create" ]
                   ]
               ]
           ]
