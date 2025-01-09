@@ -1,13 +1,13 @@
 module Main exposing (..)
 
-import Browser
 import Browser exposing (Document, UrlRequest)
-import Html exposing (..)
-import Url exposing (Url)
 import Browser.Navigation as Nav
-import Page.ListDashboards as ListDashboards
+import Html exposing (..)
 import Page.DashboardPage as DashboardPage
+import Page.ListDashboards as ListDashboards
 import Route exposing (Route)
+import Url exposing (Url)
+
 
 main : Program () Model Msg
 main =
@@ -19,6 +19,7 @@ main =
         , onUrlRequest = LinkClicked
         , onUrlChange = UrlChanged
         }
+
 
 type alias Model =
     { route : Route
@@ -32,11 +33,13 @@ type Page
     | ListPage ListDashboards.Model
     | DashboardPage DashboardPage.Model
 
+
 type Msg
     = ListPageMsg ListDashboards.Msg
     | DashboardPageMsg DashboardPage.Msg
     | LinkClicked UrlRequest
     | UrlChanged Url
+
 
 init : () -> Url -> Nav.Key -> ( Model, Cmd Msg )
 init _ url navKey =
@@ -88,7 +91,7 @@ update msg model =
             ( { model | page = ListPage updatedPageModel }
             , Cmd.map ListPageMsg updatedCmd
             )
-        
+
         ( DashboardPageMsg subMsg, DashboardPage pageModel ) ->
             let
                 ( updatedPageModel, updatedCmd ) =
@@ -97,7 +100,7 @@ update msg model =
             ( { model | page = DashboardPage updatedPageModel }
             , Cmd.map DashboardPageMsg updatedCmd
             )
-        
+
         ( LinkClicked urlRequest, _ ) ->
             case urlRequest of
                 Browser.Internal url ->
@@ -142,7 +145,7 @@ currentView model =
         DashboardPage pageModel ->
             DashboardPage.view pageModel
                 |> Html.map DashboardPageMsg
-    
+
 
 notFoundView : Html msg
 notFoundView =

@@ -1,15 +1,17 @@
 module Page.ListDashboards exposing (Model, Msg, init, update, view)
 
-import Dashboard exposing (..)
-import RemoteData exposing (WebData)
-import Http exposing (..)
-import Html exposing (..)
-import Html.Events exposing (..)
 import Browser.Navigation as Nav
-import Html.Attributes exposing (href, type_, class, rel)
+import Models.Dashboard as Dashboard exposing (..)
+import Models.DataSource exposing (..)
+import Models.Widgets exposing (..)
 import Error exposing (buildErrorMessage)
+import Html exposing (..)
+import Html.Attributes exposing (class, href, rel, type_)
+import Html.Events exposing (..)
+import Http exposing (..)
+import Json.Encode
+import RemoteData exposing (WebData)
 import Route
-import Json.Encode 
 
 
 type alias Model =
@@ -21,6 +23,7 @@ type alias Model =
     , navKey : Nav.Key
     }
 
+
 type Msg
     = FetchDashboards
     | DashboardsReceived (WebData (List Dashboard))
@@ -31,7 +34,8 @@ type Msg
     | DashboardCreated (Result Http.Error Dashboard)
     | GoToDashboard DashboardId
 
-type FormMsg 
+
+type FormMsg
     = UpdateTitle String
     | UpdatePassword String
     | UpdateUsername String
@@ -41,9 +45,11 @@ type FormMsg
     | Cancel
     | AddNewDashboard
 
+
 init : Nav.Key -> ( Model, Cmd Msg )
 init navKey =
     ( initialModel navKey, fetchDashboards )
+
 
 initialModel : Nav.Key -> Model
 initialModel navKey =
@@ -54,6 +60,7 @@ initialModel navKey =
     , createError = Nothing
     , navKey = navKey
     }
+
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
@@ -67,15 +74,15 @@ update msg model =
         DeleteDashboard dashboardId ->
             ( model, deleteDashboard dashboardId )
 
-        DashboardDeleted (Ok _ ) ->
+        DashboardDeleted (Ok _) ->
             ( model, fetchDashboards )
 
         DashboardDeleted (Err httpError) ->
             ( { model | deleteError = Just (buildErrorMessage httpError) }, Cmd.none )
-        
+
         DashboardCreated (Ok dashboard) ->
             ( model, Route.pushUrl (Route.Dashboard dashboard.dashboard_id) model.navKey )
-        
+
         ShowForm ->
             ( { model | showAddDashboardForm = True }, Cmd.none )
 
@@ -87,76 +94,116 @@ update msg model =
 
         GoToDashboard dashboardId ->
             ( model, Route.pushUrl (Route.Dashboard dashboardId) model.navKey )
-            
 
-updateForm : FormMsg -> Model -> (Model, Cmd Msg) 
+
+updateForm : FormMsg -> Model -> ( Model, Cmd Msg )
 updateForm msg model =
     case msg of
         UpdatePassword password ->
             let
-                dataSource = model.newDashboard.dataSource
-                oldDashboard = model.newDashboard
-                updatedDataSource = { dataSource | password = password }
-                updatedDashboard = { oldDashboard | dataSource = updatedDataSource }
+                dataSource =
+                    model.newDashboard.dataSource
+
+                oldDashboard =
+                    model.newDashboard
+
+                updatedDataSource =
+                    { dataSource | password = password }
+
+                updatedDashboard =
+                    { oldDashboard | dataSource = updatedDataSource }
             in
             ( { model | newDashboard = updatedDashboard }, Cmd.none )
-        
+
         UpdateUsername username ->
             let
-                dataSource = model.newDashboard.dataSource
-                oldDashboard = model.newDashboard
-                updatedDataSource = { dataSource | username = username }
-                updatedDashboard = { oldDashboard | dataSource = updatedDataSource }
+                dataSource =
+                    model.newDashboard.dataSource
+
+                oldDashboard =
+                    model.newDashboard
+
+                updatedDataSource =
+                    { dataSource | username = username }
+
+                updatedDashboard =
+                    { oldDashboard | dataSource = updatedDataSource }
             in
             ( { model | newDashboard = updatedDashboard }, Cmd.none )
 
         UpdateHost host ->
             let
-                dataSource = model.newDashboard.dataSource
-                oldDashboard = model.newDashboard
-                updatedDataSource = { dataSource | host = host }
-                updatedDashboard = { oldDashboard | dataSource = updatedDataSource }
+                dataSource =
+                    model.newDashboard.dataSource
+
+                oldDashboard =
+                    model.newDashboard
+
+                updatedDataSource =
+                    { dataSource | host = host }
+
+                updatedDashboard =
+                    { oldDashboard | dataSource = updatedDataSource }
             in
             ( { model | newDashboard = updatedDashboard }, Cmd.none )
 
         UpdatePortNumber portNumber ->
             let
-                dataSource = model.newDashboard.dataSource
-                oldDashboard = model.newDashboard
-                updatedDataSource = { dataSource | portNumber = portNumber }
-                updatedDashboard = { oldDashboard | dataSource = updatedDataSource }
+                dataSource =
+                    model.newDashboard.dataSource
+
+                oldDashboard =
+                    model.newDashboard
+
+                updatedDataSource =
+                    { dataSource | portNumber = portNumber }
+
+                updatedDashboard =
+                    { oldDashboard | dataSource = updatedDataSource }
             in
             ( { model | newDashboard = updatedDashboard }, Cmd.none )
 
         UpdateDatabase database ->
             let
-                dataSource = model.newDashboard.dataSource
-                oldDashboard = model.newDashboard
-                updatedDataSource = { dataSource | database = database }
-                updatedDashboard = { oldDashboard | dataSource = updatedDataSource }
+                dataSource =
+                    model.newDashboard.dataSource
+
+                oldDashboard =
+                    model.newDashboard
+
+                updatedDataSource =
+                    { dataSource | database = database }
+
+                updatedDashboard =
+                    { oldDashboard | dataSource = updatedDataSource }
             in
             ( { model | newDashboard = updatedDashboard }, Cmd.none )
 
         UpdateTitle title ->
             let
-                oldDashboard = model.newDashboard
-                updatedDashboard = { oldDashboard | title = title }
+                oldDashboard =
+                    model.newDashboard
+
+                updatedDashboard =
+                    { oldDashboard | title = title }
             in
             ( { model | newDashboard = updatedDashboard }, Cmd.none )
-        
+
         Cancel ->
             ( { model | showAddDashboardForm = False }, Cmd.none )
 
         AddNewDashboard ->
             ( model, create_dashboard model.newDashboard )
 
+
 emptyDashboard : Dashboard
 emptyDashboard =
-    { dashboard_id = (DashboardId -1)
+    { dashboard_id = DashboardId -1
     , title = ""
     , dataSource = { host = "", portNumber = 0, username = "", password = "", database = "" }
     , widgets = []
     }
+
 
 view : Model -> Html Msg
 view model =
@@ -167,83 +214,87 @@ view model =
         , viewAddDashboardButton
         , if model.showAddDashboardForm then
             viewAddDashboardForm
+
           else
             text ""
         , viewDeleteError model.deleteError
         , viewAddError model.createError
-        , node "link" 
+        , node "link"
             [ rel "stylesheet"
-            , href "/styles/main.css"] []
+            , href "/styles/main.css"
+            ]
+            []
         ]
 
 
 viewAddDashboardForm : Html Msg
-viewAddDashboardForm  =
+viewAddDashboardForm =
     div [ class "form" ]
-          [ div [ class "form-content" ]
-            [
-              div [ class "form-group" ]
-                  [ label [] [ text "Password" ]
-                  , input
-                      [ type_ "password"
-                        , onInput (FormChanged << UpdatePassword)
-                        ]
-                      []
-                  ]
-              , div [ class "form-group" ]
-                  [ label [] [ text "Username" ]
-                  , input
-                      [ type_ "text"
-                        , onInput (FormChanged << UpdateUsername)
-                        ]
-                      []
-                  ]
-              , div [ class "form-group" ]
-                  [ label [] [ text "Host" ]
-                  , input
-                      [ type_ "text"
-                        , onInput (FormChanged << UpdateHost)
-                        ]
-                      []
-                  ]
-              , div [ class "form-group" ]
-                  [ label [] [ text "Port" ]
-                  , input
-                      [ type_ "number"
-                        , onInput ((FormChanged << UpdatePortNumber) << Maybe.withDefault 0 << String.toInt)
-                        ]
-                      []
-                  ]
-              , div [ class "form-group" ]
-                  [ label [] [ text "Database" ]
-                  , input
-                      [ type_ "text"
-                        , onInput (FormChanged << UpdateDatabase)
-                        ]
-                      []
-                  ]
-              , div [ class "form-group" ]
-                  [ label [] [ text "Dashboard Title" ]
-                  , input
-                      [ type_ "text"
-                        , onInput (FormChanged << UpdateTitle)
-                        ]
-                      []
-                  ]
-              , div [ class "form-buttons" ]
-                  [ button [ onClick (FormChanged Cancel) ] [ text "Cancel" ]
-                  , button [ onClick (FormChanged AddNewDashboard) ] [ text "Create" ]
-                  ]
-              ]
-          ]
+        [ div [ class "form-content" ]
+            [ div [ class "form-group" ]
+                [ label [] [ text "Password" ]
+                , input
+                    [ type_ "password"
+                    , onInput (FormChanged << UpdatePassword)
+                    ]
+                    []
+                ]
+            , div [ class "form-group" ]
+                [ label [] [ text "Username" ]
+                , input
+                    [ type_ "text"
+                    , onInput (FormChanged << UpdateUsername)
+                    ]
+                    []
+                ]
+            , div [ class "form-group" ]
+                [ label [] [ text "Host" ]
+                , input
+                    [ type_ "text"
+                    , onInput (FormChanged << UpdateHost)
+                    ]
+                    []
+                ]
+            , div [ class "form-group" ]
+                [ label [] [ text "Port" ]
+                , input
+                    [ type_ "number"
+                    , onInput ((FormChanged << UpdatePortNumber) << Maybe.withDefault 0 << String.toInt)
+                    ]
+                    []
+                ]
+            , div [ class "form-group" ]
+                [ label [] [ text "Database" ]
+                , input
+                    [ type_ "text"
+                    , onInput (FormChanged << UpdateDatabase)
+                    ]
+                    []
+                ]
+            , div [ class "form-group" ]
+                [ label [] [ text "Dashboard Title" ]
+                , input
+                    [ type_ "text"
+                    , onInput (FormChanged << UpdateTitle)
+                    ]
+                    []
+                ]
+            , div [ class "form-buttons" ]
+                [ button [ onClick (FormChanged Cancel) ] [ text "Cancel" ]
+                , button [ onClick (FormChanged AddNewDashboard) ] [ text "Create" ]
+                ]
+            ]
+        ]
 
-viewAddDashboardButton :  Html Msg
+
+viewAddDashboardButton : Html Msg
 viewAddDashboardButton =
-    div 
+    div
         [ class "dashboard-square"
         , onClick ShowForm
         ]
         [ text "+" ]
+
 
 viewDashboards : WebData (List Dashboard) -> Html Msg
 viewDashboards dashboards =
@@ -258,7 +309,7 @@ viewDashboards dashboards =
             div []
                 [ h3 [] [ text "Dashboards" ]
                 , table []
-                    ([ ] ++ List.map viewDashboard actualDashboards)
+                    ([] ++ List.map viewDashboard actualDashboards)
                 ]
 
         RemoteData.Failure httpError ->
@@ -268,8 +319,7 @@ viewDashboards dashboards =
 viewDashboard : Dashboard -> Html Msg
 viewDashboard dashboard =
     tr []
-        [ 
-        td [ class "dashboard-square", onClick (GoToDashboard dashboard.dashboard_id) ]
+        [ td [ class "dashboard-square", onClick (GoToDashboard dashboard.dashboard_id) ]
             [ text dashboard.title ]
         , td []
             [ button [ type_ "button", onClick (DeleteDashboard dashboard.dashboard_id) ] [ text "Delete" ] ]
@@ -287,6 +337,7 @@ viewFetchError errorMessage =
         , text ("Error: " ++ errorMessage)
         ]
 
+
 viewDeleteError : Maybe String -> Html msg
 viewDeleteError maybeError =
     case maybeError of
@@ -298,6 +349,7 @@ viewDeleteError maybeError =
 
         Nothing ->
             text ""
+
 
 viewAddError : Maybe String -> Html msg
 viewAddError maybeError =
@@ -311,32 +363,35 @@ viewAddError maybeError =
         Nothing ->
             text ""
 
+
 fetchDashboards : Cmd Msg
 fetchDashboards =
-  Http.post
-    { url = "http://127.0.0.1:6969/get-dashboards"
-    , body = Http.emptyBody
-    , expect = 
-        dashboardsDecoder
-          |>
-    Http.expectJson (RemoteData.fromResult >> DashboardsReceived)
-    }
+    Http.post
+        { url = "http://127.0.0.1:6969/get-dashboards"
+        , body = Http.emptyBody
+        , expect =
+            dashboardsDecoder
+                |> Http.expectJson (RemoteData.fromResult >> DashboardsReceived)
+        }
+
 
 deleteDashboard : DashboardId -> Cmd Msg
 deleteDashboard dashboardId =
     Http.post
         { url = "http://127.0.0.1:6969/delete-dashboard"
-        , body = Http.jsonBody 
-            (Json.Encode.object [ ("dashboard_id", Dashboard.idEncoder dashboardId) ])
+        , body =
+            Http.jsonBody
+                (Json.Encode.object [ ( "dashboard_id", Dashboard.idEncoder dashboardId ) ])
         , expect = Http.expectJson DashboardDeleted dashboardsDecoder
         }
 
+
 create_dashboard : Dashboard -> Cmd Msg
 create_dashboard dashboard =
-  Http.post
-    { url = "http://127.0.0.1:6969/create-dashboard"
-    , body = Http.jsonBody 
-        (dashboardEncoder dashboard )
-        
-    , expect = Http.expectJson DashboardCreated dashboardDecoder
-    }
+    Http.post
+        { url = "http://127.0.0.1:6969/create-dashboard"
+        , body =
+            Http.jsonBody
+                (dashboardEncoder dashboard)
+        , expect = Http.expectJson DashboardCreated dashboardDecoder
+        }

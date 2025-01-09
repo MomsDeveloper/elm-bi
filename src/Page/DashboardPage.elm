@@ -1,16 +1,19 @@
 module Page.DashboardPage exposing (..)
-import Dashboard exposing (..)
+
 import Browser.Navigation as Nav
-import RemoteData exposing (WebData)
-import Html exposing (..)
-import Json.Encode 
-import Http exposing (..)
+import Models.Dashboard as Dashboard exposing (..)
+import Models.DataSource exposing (..)
+import Models.Widgets exposing (..)
 import Error exposing (buildErrorMessage)
-import Html.Attributes exposing (href, rel, class, value, disabled)
+import Html exposing (..)
+import Html.Attributes exposing (class, disabled, href, rel, value)
 import Html.Events exposing (onClick, onInput)
-import Widgets.PieChart
+import Http exposing (..)
+import Json.Encode
+import List.Extra
+import RemoteData exposing (WebData)
 import Widgets.Histogram
-import List.Extra 
+import Widgets.PieChart
 
 
 type alias Model =
@@ -21,17 +24,9 @@ type alias Model =
     , showAddWidgetForm : Bool
     , selectedTable : Table
     , formButtonsDisabled : Bool
-    , newWidget : AddWidget
+    , newWidget : Widget
     }
 
-type alias AddWidget =
-    { 
-      widget_type : String
-    , widget_id : Int
-    , title : String
-    , table : String
-    , data_column : String
-    }
 
 type Msg
     = DashboardReceived (WebData Dashboard)
@@ -41,12 +36,14 @@ type Msg
     | ShowForm
     | FormChanged FormMsg
 
-type FormMsg 
+
+type FormMsg
     = TableSelected String
     | WidgetTypeSelected String
     | ColumnToggled String
     | Cancel
     | AddNewWidget
+
 
 init : DashboardId -> Nav.Key -> ( Model, Cmd Msg )
 init dashboardId navKey =
@@ -62,7 +59,7 @@ initialModel navKey =
     , tables = RemoteData.NotAsked
     , selectedTable = Table "" []
     , formButtonsDisabled = False
-    , newWidget = emptyWidget
+    , newWidget = emptyWidget "PieChart"
     }
 
 
@@ -70,28 +67,35 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         DashboardReceived response ->
-            ( { model | dashboard = response , widgetsData = [] , tables = RemoteData.NotAsked }
-            , case response of
-                RemoteData.Success dashboard -> getDataSourceTables dashboard.dashboard_id
-                _ -> Cmd.none
-            )
-        
+            let
+                cmd =
+                    case response of
+                        RemoteData.Success dashboard ->
+                            getDataSourceTables dashboard.dashboard_id
+
+                        _ ->
+                            Cmd.none
+            in
+            ( { model | dashboard = response, widgetsData = [], tables = RemoteData.NotAsked }, cmd )
+
         PieDataReceived response ->
-            ( { model | widgetsData = model.widgetsData ++ [RemoteData.map (\pieData -> Piedata pieData) response] }, Cmd.none )
+            updateWidgetData model response Piedata
+
         HistogramDataReceived response ->
-            ( { model | widgetsData = model.widgetsData ++ [RemoteData.map (\histogramData -> Histogramdata histogramData) response] }, Cmd.none )
+            updateWidgetData model response Histogramdata
 
         TablesReceived response ->
-            case response of
-                RemoteData.Success (head :: _) ->
-                    let
-                        newWidget = model.newWidget
-                        updatedWidget = { newWidget | table = head.name }
-                    in
-                    ( { model | tables = response, selectedTable = head, newWidget = updatedWidget }, fetchWidgetsData model )
-                _ ->
-                    ( { model | tables = response }, fetchWidgetsData model )
-        
+            let
+                newModel =
+                    case response of
+                        RemoteData.Success (head :: _) ->
+                            { model | tables = response, selectedTable = head }
+
+                        _ ->
+                            { model | tables = response }
+            in
+            ( newModel, fetchWidgetsData model )
+
         ShowForm ->
             ( { model | showAddWidgetForm = True }, Cmd.none )
 
@@ -106,45 +110,81 @@ updateForm formMsg model =
             ( { model | showAddWidgetForm = False }, Cmd.none )
 
         TableSelected tableName ->
-            let
-                selectedTable =
-                    List.Extra.find (\table -> table.name == tableName) (RemoteData.withDefault [] model.tables)
-                
-                newWidget = model.newWidget
-                updatedWidget = { newWidget | table = tableName }
-            in
-            case selectedTable of
-                Just table ->
-                    ( { model | selectedTable = table, formButtonsDisabled = False, newWidget = updatedWidget }, Cmd.none )
-                Nothing ->
-                    ( model, Cmd.none )
+            updateTableSelection tableName model
 
         ColumnToggled columnName ->
-            let
-                newWidget = model.newWidget
-                updatedWidget = { newWidget | data_column = columnName }
-            in
-            if model.formButtonsDisabled then
-                ( { model | formButtonsDisabled = False, newWidget = updatedWidget }, Cmd.none )
-            else
-                ( { model | formButtonsDisabled = True, newWidget = updatedWidget }, Cmd.none )
+            toggleColumn columnName model
 
         WidgetTypeSelected widgetType ->
-            let
-                newWidget = model.newWidget
-                updatedWidget = { newWidget | widget_type = widgetType }
-            in
-            ( { model | newWidget = updatedWidget }, Cmd.none )
+            ( { model | newWidget = emptyWidget widgetType }, Cmd.none )
 
         AddNewWidget ->
             case model.dashboard of
                 RemoteData.Success dashboardData ->
-                    ( { model | showAddWidgetForm = False , newWidget = emptyWidget, formButtonsDisabled = False }, addWidget model.newWidget dashboardData.dashboard_id )
+                    ( { model | showAddWidgetForm = False, newWidget = emptyWidget "", formButtonsDisabled = False }
+                    , addWidget model.newWidget dashboardData.dashboard_id
+                    )
+
                 _ ->
                     ( model, Cmd.none )
 
-emptyWidget : AddWidget
-emptyWidget = { widget_type = "PieChart", widget_id = 0, title = "", table = "", data_column = "" }
+
+emptyWidget : String -> Widget
+emptyWidget widgetType =
+    case widgetType of
+        "PieChart" ->
+            Pie { widget_id = 0, title = "", table = "", data_column = "" }
+
+        "Histogram" ->
+            Histogram { widget_id = 0, title = "", table = "", data_column = "" }
+
+        _ ->
+            Pie { widget_id = 0, title = "", table = "", data_column = "" }
+
+
+updateWidgetData : Model -> WebData a -> (a -> WidgetData) -> ( Model, Cmd Msg )
+updateWidgetData model response constructor =
+    ( { model | widgetsData = model.widgetsData ++ [ RemoteData.map constructor response ] }, Cmd.none )
+
+
+updateTableSelection : String -> Model -> ( Model, Cmd Msg )
+updateTableSelection tableName model =
+    let
+        selectedTable =
+            List.Extra.find (\table -> table.name == tableName) (RemoteData.withDefault [] model.tables)
+
+        updatedWidget =
+            case model.newWidget of
+                Pie data ->
+                    Pie { data | table = tableName }
+
+                Histogram data ->
+                    Histogram { data | table = tableName }
+    in
+    case selectedTable of
+        Just table ->
+            ( { model | selectedTable = table, formButtonsDisabled = False, newWidget = updatedWidget }, Cmd.none )
+
+        Nothing ->
+            ( model, Cmd.none )
+
+
+toggleColumn : String -> Model -> ( Model, Cmd Msg )
+toggleColumn columnName model =
+    let
+        updatedWidget =
+            case model.newWidget of
+                Pie data ->
+                    Pie { data | data_column = columnName }
+
+                Histogram data ->
+                    Histogram { data | data_column = columnName }
+
+        isFormDisabled =
+            not model.formButtonsDisabled
+    in
+    ( { model | formButtonsDisabled = isFormDisabled, newWidget = updatedWidget }, Cmd.none )
+
 
 view : Model -> Html Msg
 view model =
@@ -153,14 +193,17 @@ view model =
         , viewAddWidgetButton
         , if model.showAddWidgetForm then
             viewAddWidgetForm model
+
           else
             text ""
         , viewDashboard model.dashboard model.widgetsData
-        
-        , node "link" 
+        , node "link"
             [ rel "stylesheet"
-            , href "/styles/main.css"] []
+            , href "/styles/main.css"
+            ]
+            []
         ]
+
 
 viewAddWidgetForm : Model -> Html Msg
 viewAddWidgetForm model =
@@ -171,27 +214,28 @@ viewAddWidgetForm model =
         RemoteData.Loading ->
             div [] [ text "Loading tables..." ]
 
-
         RemoteData.Success tableList ->
             div [ class "add-widget-form" ]
                 [ h3 [] [ text "Add Widget" ]
-                , div [] [ 
-                select 
-                    [ class "table-dropdown", onInput (FormChanged << WidgetTypeSelected) ]
-                    [ option [ value "PieChart" ] [ text "Pie Chart" ] 
-                    , option [ value "Histogram" ] [ text "Histogram" ] ]
-                ]
+                , div []
+                    [ select
+                        [ class "table-dropdown", onInput (FormChanged << WidgetTypeSelected) ]
+                        [ option [ value "PieChart" ] [ text "Pie Chart" ]
+                        , option [ value "Histogram" ] [ text "Histogram" ]
+                        ]
+                    ]
                 , select
                     [ class "table-dropdown", onInput (FormChanged << TableSelected) ]
                     (List.map (\table -> option [ value table.name ] [ text table.name ]) tableList)
                 , div [] [ text "Select columns:" ]
-                , viewTableColumns (model)
-                , button [ class "add-widget-button", onClick (FormChanged AddNewWidget)] [ text "Add Widget" ]
+                , viewTableColumns model
+                , button [ class "add-widget-button", onClick (FormChanged AddNewWidget) ] [ text "Add Widget" ]
                 , button [ class "cancel-button", onClick (FormChanged Cancel) ] [ text "Cancel" ]
                 ]
 
         RemoteData.Failure httpError ->
             viewFetchError (buildErrorMessage httpError)
+
 
 viewTableColumns : Model -> Html Msg
 viewTableColumns model =
@@ -199,10 +243,11 @@ viewTableColumns model =
         (List.map
             (\col ->
                 div []
-                    [ button 
+                    [ button
                         [ onClick ((FormChanged << ColumnToggled) col.name)
-                        , disabled (model.newWidget.data_column /= col.name && model.formButtonsDisabled)
-                        ] 
+
+                        -- , disabled (model.newWidget.data_column /= col.name && model.formButtonsDisabled)
+                        ]
                         [ text col.name ]
                     ]
             )
@@ -210,13 +255,14 @@ viewTableColumns model =
         )
 
 
-viewAddWidgetButton :  Html Msg
+viewAddWidgetButton : Html Msg
 viewAddWidgetButton =
-    div 
+    div
         [ class "widget-square"
         , onClick ShowForm
         ]
         [ text "+" ]
+
 
 viewDashboard : WebData Dashboard -> List (WebData WidgetData) -> Html Msg
 viewDashboard dashboard widgetsData =
@@ -231,14 +277,15 @@ viewDashboard dashboard widgetsData =
             div []
                 [ h3 [] [ text dashboardData.title ]
                 , div []
-                    ([ ] ++ List.map viewWidget widgetsData)
+                    ([] ++ List.map viewWidget widgetsData)
                 ]
+
         RemoteData.Failure httpError ->
             viewFetchError (buildErrorMessage httpError)
 
 
 viewWidget : WebData WidgetData -> Html Msg
-viewWidget  widgetData =
+viewWidget widgetData =
     case widgetData of
         RemoteData.NotAsked ->
             text ""
@@ -250,7 +297,7 @@ viewWidget  widgetData =
             case data of
                 Piedata pieData ->
                     div [ class "widget-square" ] [ Widgets.PieChart.view pieData ]
-                
+
                 Histogramdata histogramData ->
                     div [ class "widget-square" ] [ Widgets.Histogram.view histogramData ]
 
@@ -269,73 +316,77 @@ viewFetchError errorMessage =
         , text ("Error: " ++ errorMessage)
         ]
 
+
 getDashboard : DashboardId -> Cmd Msg
 getDashboard dashboardId =
     Http.post
         { url = "http://127.0.0.1:6969/get-dashboard"
-        , body = Http.jsonBody 
-            (Json.Encode.object [ ("dashboard_id", Dashboard.idEncoder dashboardId) ])
+        , body =
+            Http.jsonBody
+                (Json.Encode.object [ ( "dashboard_id", Dashboard.idEncoder dashboardId ) ])
         , expect = Http.expectJson (DashboardReceived << RemoteData.fromResult) dashboardDecoder
         }
+
 
 fetchWidgetsData : Model -> Cmd Msg
 fetchWidgetsData model =
     case model.dashboard of
         RemoteData.Success dashboardData ->
             Cmd.batch (List.map (\widget -> fetchWidgetData dashboardData.dashboard_id widget) dashboardData.widgets)
+
         _ ->
             Cmd.none
+
 
 fetchWidgetData : DashboardId -> Widget -> Cmd Msg
 fetchWidgetData dashboardId widget =
     case widget of
         Pie pie ->
-            fetchPieData dashboardId pie.widget_id 
+            fetchPieData dashboardId pie.widget_id
+
         Histogram histogram ->
             fetchHistogramData dashboardId histogram.widget_id
+
 
 fetchPieData : DashboardId -> Int -> Cmd Msg
 fetchPieData dashboardId widgetId =
     Http.post
         { url = "http://127.0.0.1:6969/fetch-widget-data"
-        , body = Http.jsonBody 
-            (Json.Encode.object [ ("dashboard_id", Dashboard.idEncoder dashboardId), ("widget_id", Json.Encode.int widgetId) ])
+        , body =
+            Http.jsonBody
+                (Json.Encode.object [ ( "dashboard_id", Dashboard.idEncoder dashboardId ), ( "widget_id", Json.Encode.int widgetId ) ])
         , expect = Http.expectJson (PieDataReceived << RemoteData.fromResult) pieDataDecoder
         }
+
 
 fetchHistogramData : DashboardId -> Int -> Cmd Msg
 fetchHistogramData dashboardId widgetId =
     Http.post
         { url = "http://127.0.0.1:6969/fetch-widget-data"
-        , body = Http.jsonBody 
-            (Json.Encode.object [ ("dashboard_id", Dashboard.idEncoder dashboardId), ("widget_id", Json.Encode.int widgetId) ])
+        , body =
+            Http.jsonBody
+                (Json.Encode.object [ ( "dashboard_id", Dashboard.idEncoder dashboardId ), ( "widget_id", Json.Encode.int widgetId ) ])
         , expect = Http.expectJson (HistogramDataReceived << RemoteData.fromResult) histogramDataDecoder
         }
+
 
 getDataSourceTables : DashboardId -> Cmd Msg
 getDataSourceTables dashboardId =
     Http.post
         { url = "http://127.0.0.1:6969/get-data-source-tables"
-        , body = Http.jsonBody 
-            (Json.Encode.object [ ("dashboard_id", Dashboard.idEncoder dashboardId) ])
+        , body =
+            Http.jsonBody
+                (Json.Encode.object [ ( "dashboard_id", Dashboard.idEncoder dashboardId ) ])
         , expect = Http.expectJson (TablesReceived << RemoteData.fromResult) tablesDecoder
         }
-    
-addWidget : AddWidget -> DashboardId -> Cmd Msg
+
+
+addWidget : Widget -> DashboardId -> Cmd Msg
 addWidget widget dashboardId =
     Http.post
         { url = "http://127.0.0.1:6969/add-widget"
-        , body = Http.jsonBody 
-            (Json.Encode.object [ ("dashboard_id", Dashboard.idEncoder dashboardId), ("widget", addWidgetEncoder widget) ])
+        , body =
+            Http.jsonBody
+                (Json.Encode.object [ ( "dashboard_id", Dashboard.idEncoder dashboardId ), ( "widget", widgetEncoder widget ) ])
         , expect = Http.expectJson (DashboardReceived << RemoteData.fromResult) dashboardDecoder
         }
-
-addWidgetEncoder : AddWidget -> Json.Encode.Value
-addWidgetEncoder widget =
-    Json.Encode.object 
-        [ ("widget_type", Json.Encode.string widget.widget_type)
-        , ("widget_id", Json.Encode.int widget.widget_id)
-        , ("title", Json.Encode.string widget.title)
-        , ("table", Json.Encode.string widget.table)
-        , ("data_column", Json.Encode.string widget.data_column)
-        ]

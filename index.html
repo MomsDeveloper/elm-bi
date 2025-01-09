@@ -5430,11 +5430,11 @@ var $elm$core$Basics$composeL = F3(
 		return g(
 			f(x));
 	});
-var $author$project$Dashboard$Dashboard = F4(
+var $author$project$Models$Dashboard$Dashboard = F4(
 	function (dashboard_id, title, widgets, dataSource) {
 		return {dashboard_id: dashboard_id, dataSource: dataSource, title: title, widgets: widgets};
 	});
-var $author$project$Dashboard$DataSource = F5(
+var $author$project$Models$DataSource$DataSource = F5(
 	function (host, portNumber, username, password, database) {
 		return {database: database, host: host, password: password, portNumber: portNumber, username: username};
 	});
@@ -5442,36 +5442,36 @@ var $elm$json$Json$Decode$field = _Json_decodeField;
 var $elm$json$Json$Decode$int = _Json_decodeInt;
 var $elm$json$Json$Decode$map5 = _Json_map5;
 var $elm$json$Json$Decode$string = _Json_decodeString;
-var $author$project$Dashboard$dataSourceDecoder = A6(
+var $author$project$Models$DataSource$dataSourceDecoder = A6(
 	$elm$json$Json$Decode$map5,
-	$author$project$Dashboard$DataSource,
+	$author$project$Models$DataSource$DataSource,
 	A2($elm$json$Json$Decode$field, 'host', $elm$json$Json$Decode$string),
 	A2($elm$json$Json$Decode$field, 'port', $elm$json$Json$Decode$int),
 	A2($elm$json$Json$Decode$field, 'username', $elm$json$Json$Decode$string),
 	A2($elm$json$Json$Decode$field, 'password', $elm$json$Json$Decode$string),
 	A2($elm$json$Json$Decode$field, 'database', $elm$json$Json$Decode$string));
-var $author$project$Dashboard$DashboardId = function (a) {
+var $author$project$Models$Dashboard$DashboardId = function (a) {
 	return {$: 'DashboardId', a: a};
 };
-var $author$project$Dashboard$idDecoder = A2($elm$json$Json$Decode$map, $author$project$Dashboard$DashboardId, $elm$json$Json$Decode$int);
+var $author$project$Models$Dashboard$idDecoder = A2($elm$json$Json$Decode$map, $author$project$Models$Dashboard$DashboardId, $elm$json$Json$Decode$int);
 var $elm$json$Json$Decode$list = _Json_decodeList;
 var $elm$json$Json$Decode$map4 = _Json_map4;
-var $author$project$Dashboard$Histogram = function (a) {
+var $author$project$Models$Widgets$Histogram = function (a) {
 	return {$: 'Histogram', a: a};
 };
-var $author$project$Dashboard$Pie = function (a) {
+var $author$project$Models$Widgets$Pie = function (a) {
 	return {$: 'Pie', a: a};
 };
 var $elm$json$Json$Decode$andThen = _Json_andThen;
 var $elm$json$Json$Decode$fail = _Json_fail;
-var $author$project$Dashboard$widgetDecoder = A2(
+var $author$project$Models$Widgets$widgetDecoder = A2(
 	$elm$json$Json$Decode$andThen,
 	function (widget_type) {
 		switch (widget_type) {
 			case 'PieChart':
 				return A2(
 					$elm$json$Json$Decode$map,
-					$author$project$Dashboard$Pie,
+					$author$project$Models$Widgets$Pie,
 					A5(
 						$elm$json$Json$Decode$map4,
 						F4(
@@ -5485,7 +5485,7 @@ var $author$project$Dashboard$widgetDecoder = A2(
 			case 'Histogram':
 				return A2(
 					$elm$json$Json$Decode$map,
-					$author$project$Dashboard$Histogram,
+					$author$project$Models$Widgets$Histogram,
 					A5(
 						$elm$json$Json$Decode$map4,
 						F4(
@@ -5501,16 +5501,16 @@ var $author$project$Dashboard$widgetDecoder = A2(
 		}
 	},
 	A2($elm$json$Json$Decode$field, 'widget_type', $elm$json$Json$Decode$string));
-var $author$project$Dashboard$dashboardDecoder = A5(
+var $author$project$Models$Dashboard$dashboardDecoder = A5(
 	$elm$json$Json$Decode$map4,
-	$author$project$Dashboard$Dashboard,
-	A2($elm$json$Json$Decode$field, 'dashboard_id', $author$project$Dashboard$idDecoder),
+	$author$project$Models$Dashboard$Dashboard,
+	A2($elm$json$Json$Decode$field, 'dashboard_id', $author$project$Models$Dashboard$idDecoder),
 	A2($elm$json$Json$Decode$field, 'title', $elm$json$Json$Decode$string),
 	A2(
 		$elm$json$Json$Decode$field,
 		'widgets',
-		$elm$json$Json$Decode$list($author$project$Dashboard$widgetDecoder)),
-	A2($elm$json$Json$Decode$field, 'dataSource', $author$project$Dashboard$dataSourceDecoder));
+		$elm$json$Json$Decode$list($author$project$Models$Widgets$widgetDecoder)),
+	A2($elm$json$Json$Decode$field, 'dataSource', $author$project$Models$DataSource$dataSourceDecoder));
 var $elm$json$Json$Decode$decodeString = _Json_runOnString;
 var $elm$http$Http$BadStatus_ = F2(
 	function (a, b) {
@@ -6141,7 +6141,7 @@ var $krisajenkins$remotedata$RemoteData$fromResult = function (result) {
 	}
 };
 var $elm$json$Json$Encode$int = _Json_wrap;
-var $author$project$Dashboard$idEncoder = function (_v0) {
+var $author$project$Models$Dashboard$idEncoder = function (_v0) {
 	var id = _v0.a;
 	return $elm$json$Json$Encode$int(id);
 };
@@ -6345,29 +6345,41 @@ var $author$project$Page$DashboardPage$getDashboard = function (dashboardId) {
 						[
 							_Utils_Tuple2(
 							'dashboard_id',
-							$author$project$Dashboard$idEncoder(dashboardId))
+							$author$project$Models$Dashboard$idEncoder(dashboardId))
 						]))),
 			expect: A2(
 				$elm$http$Http$expectJson,
 				A2($elm$core$Basics$composeL, $author$project$Page$DashboardPage$DashboardReceived, $krisajenkins$remotedata$RemoteData$fromResult),
-				$author$project$Dashboard$dashboardDecoder),
+				$author$project$Models$Dashboard$dashboardDecoder),
 			url: 'http://127.0.0.1:6969/get-dashboard'
 		});
 };
 var $krisajenkins$remotedata$RemoteData$Loading = {$: 'Loading'};
 var $krisajenkins$remotedata$RemoteData$NotAsked = {$: 'NotAsked'};
-var $author$project$Dashboard$Table = F2(
+var $author$project$Models$DataSource$Table = F2(
 	function (name, columns) {
 		return {columns: columns, name: name};
 	});
-var $author$project$Page$DashboardPage$emptyWidget = {data_column: '', table: '', title: '', widget_id: 0, widget_type: 'PieChart'};
+var $author$project$Page$DashboardPage$emptyWidget = function (widgetType) {
+	switch (widgetType) {
+		case 'PieChart':
+			return $author$project$Models$Widgets$Pie(
+				{data_column: '', table: '', title: '', widget_id: 0});
+		case 'Histogram':
+			return $author$project$Models$Widgets$Histogram(
+				{data_column: '', table: '', title: '', widget_id: 0});
+		default:
+			return $author$project$Models$Widgets$Pie(
+				{data_column: '', table: '', title: '', widget_id: 0});
+	}
+};
 var $author$project$Page$DashboardPage$initialModel = function (navKey) {
 	return {
 		dashboard: $krisajenkins$remotedata$RemoteData$Loading,
 		formButtonsDisabled: false,
 		navKey: navKey,
-		newWidget: $author$project$Page$DashboardPage$emptyWidget,
-		selectedTable: A2($author$project$Dashboard$Table, '', _List_Nil),
+		newWidget: $author$project$Page$DashboardPage$emptyWidget('PieChart'),
+		selectedTable: A2($author$project$Models$DataSource$Table, '', _List_Nil),
 		showAddWidgetForm: false,
 		tables: $krisajenkins$remotedata$RemoteData$NotAsked,
 		widgetsData: _List_Nil
@@ -6382,7 +6394,7 @@ var $author$project$Page$DashboardPage$init = F2(
 var $author$project$Page$ListDashboards$DashboardsReceived = function (a) {
 	return {$: 'DashboardsReceived', a: a};
 };
-var $author$project$Dashboard$dashboardsDecoder = $elm$json$Json$Decode$list($author$project$Dashboard$dashboardDecoder);
+var $author$project$Models$Dashboard$dashboardsDecoder = $elm$json$Json$Decode$list($author$project$Models$Dashboard$dashboardDecoder);
 var $elm$http$Http$emptyBody = _Http_emptyBody;
 var $author$project$Page$ListDashboards$fetchDashboards = $elm$http$Http$post(
 	{
@@ -6390,14 +6402,14 @@ var $author$project$Page$ListDashboards$fetchDashboards = $elm$http$Http$post(
 		expect: A2(
 			$elm$http$Http$expectJson,
 			A2($elm$core$Basics$composeR, $krisajenkins$remotedata$RemoteData$fromResult, $author$project$Page$ListDashboards$DashboardsReceived),
-			$author$project$Dashboard$dashboardsDecoder),
+			$author$project$Models$Dashboard$dashboardsDecoder),
 		url: 'http://127.0.0.1:6969/get-dashboards'
 	});
 var $elm$core$Basics$negate = function (n) {
 	return -n;
 };
 var $author$project$Page$ListDashboards$emptyDashboard = {
-	dashboard_id: $author$project$Dashboard$DashboardId(-1),
+	dashboard_id: $author$project$Models$Dashboard$DashboardId(-1),
 	dataSource: {database: '', host: '', password: '', portNumber: 0, username: ''},
 	title: '',
 	widgets: _List_Nil
@@ -6502,13 +6514,13 @@ var $elm$core$Maybe$map = F2(
 			return $elm$core$Maybe$Nothing;
 		}
 	});
-var $author$project$Dashboard$idParser = A2(
+var $author$project$Models$Dashboard$idParser = A2(
 	$elm$url$Url$Parser$custom,
 	'DASHBOARDID',
 	function (dashboardId) {
 		return A2(
 			$elm$core$Maybe$map,
-			$author$project$Dashboard$DashboardId,
+			$author$project$Models$Dashboard$DashboardId,
 			$elm$core$String$toInt(dashboardId));
 	});
 var $elm$url$Url$Parser$mapState = F2(
@@ -6628,7 +6640,7 @@ var $author$project$Route$matchRoute = $elm$url$Url$Parser$oneOf(
 			A2(
 				$elm$url$Url$Parser$slash,
 				$elm$url$Url$Parser$s('dashboards'),
-				$author$project$Dashboard$idParser))
+				$author$project$Models$Dashboard$idParser))
 		]));
 var $elm$url$Url$Parser$getFirstMatch = function (states) {
 	getFirstMatch:
@@ -6812,17 +6824,17 @@ var $elm$url$Url$toString = function (url) {
 					_Utils_ap(http, url.host)),
 				url.path)));
 };
-var $author$project$Dashboard$Histogramdata = function (a) {
+var $author$project$Models$DataSource$Histogramdata = function (a) {
 	return {$: 'Histogramdata', a: a};
 };
-var $author$project$Dashboard$Piedata = function (a) {
+var $author$project$Models$DataSource$Piedata = function (a) {
 	return {$: 'Piedata', a: a};
 };
 var $author$project$Page$DashboardPage$HistogramDataReceived = function (a) {
 	return {$: 'HistogramDataReceived', a: a};
 };
 var $elm$json$Json$Decode$float = _Json_decodeFloat;
-var $author$project$Dashboard$histogramDataDecoder = A2(
+var $author$project$Models$DataSource$histogramDataDecoder = A2(
 	$elm$json$Json$Decode$field,
 	'data',
 	$elm$json$Json$Decode$list($elm$json$Json$Decode$float));
@@ -6836,7 +6848,7 @@ var $author$project$Page$DashboardPage$fetchHistogramData = F2(
 							[
 								_Utils_Tuple2(
 								'dashboard_id',
-								$author$project$Dashboard$idEncoder(dashboardId)),
+								$author$project$Models$Dashboard$idEncoder(dashboardId)),
 								_Utils_Tuple2(
 								'widget_id',
 								$elm$json$Json$Encode$int(widgetId))
@@ -6844,24 +6856,24 @@ var $author$project$Page$DashboardPage$fetchHistogramData = F2(
 				expect: A2(
 					$elm$http$Http$expectJson,
 					A2($elm$core$Basics$composeL, $author$project$Page$DashboardPage$HistogramDataReceived, $krisajenkins$remotedata$RemoteData$fromResult),
-					$author$project$Dashboard$histogramDataDecoder),
+					$author$project$Models$DataSource$histogramDataDecoder),
 				url: 'http://127.0.0.1:6969/fetch-widget-data'
 			});
 	});
 var $author$project$Page$DashboardPage$PieDataReceived = function (a) {
 	return {$: 'PieDataReceived', a: a};
 };
-var $author$project$Dashboard$PieData = F2(
+var $author$project$Models$DataSource$PieData = F2(
 	function (title, count) {
 		return {count: count, title: title};
 	});
-var $author$project$Dashboard$pieDataDecoder = A2(
+var $author$project$Models$DataSource$pieDataDecoder = A2(
 	$elm$json$Json$Decode$field,
 	'data',
 	$elm$json$Json$Decode$list(
 		A3(
 			$elm$json$Json$Decode$map2,
-			$author$project$Dashboard$PieData,
+			$author$project$Models$DataSource$PieData,
 			A2($elm$json$Json$Decode$field, 'title', $elm$json$Json$Decode$string),
 			A2($elm$json$Json$Decode$field, 'count', $elm$json$Json$Decode$int))));
 var $author$project$Page$DashboardPage$fetchPieData = F2(
@@ -6874,7 +6886,7 @@ var $author$project$Page$DashboardPage$fetchPieData = F2(
 							[
 								_Utils_Tuple2(
 								'dashboard_id',
-								$author$project$Dashboard$idEncoder(dashboardId)),
+								$author$project$Models$Dashboard$idEncoder(dashboardId)),
 								_Utils_Tuple2(
 								'widget_id',
 								$elm$json$Json$Encode$int(widgetId))
@@ -6882,7 +6894,7 @@ var $author$project$Page$DashboardPage$fetchPieData = F2(
 				expect: A2(
 					$elm$http$Http$expectJson,
 					A2($elm$core$Basics$composeL, $author$project$Page$DashboardPage$PieDataReceived, $krisajenkins$remotedata$RemoteData$fromResult),
-					$author$project$Dashboard$pieDataDecoder),
+					$author$project$Models$DataSource$pieDataDecoder),
 				url: 'http://127.0.0.1:6969/fetch-widget-data'
 			});
 	});
@@ -6914,24 +6926,24 @@ var $author$project$Page$DashboardPage$fetchWidgetsData = function (model) {
 var $author$project$Page$DashboardPage$TablesReceived = function (a) {
 	return {$: 'TablesReceived', a: a};
 };
-var $author$project$Dashboard$TableColumn = F2(
+var $author$project$Models$DataSource$TableColumn = F2(
 	function (name, dataType) {
 		return {dataType: dataType, name: name};
 	});
-var $author$project$Dashboard$tableColumnDecoder = A3(
+var $author$project$Models$DataSource$tableColumnDecoder = A3(
 	$elm$json$Json$Decode$map2,
-	$author$project$Dashboard$TableColumn,
+	$author$project$Models$DataSource$TableColumn,
 	A2($elm$json$Json$Decode$field, 'name', $elm$json$Json$Decode$string),
 	A2($elm$json$Json$Decode$field, 'dataType', $elm$json$Json$Decode$string));
-var $author$project$Dashboard$tableDecoder = A3(
+var $author$project$Models$DataSource$tableDecoder = A3(
 	$elm$json$Json$Decode$map2,
-	$author$project$Dashboard$Table,
+	$author$project$Models$DataSource$Table,
 	A2($elm$json$Json$Decode$field, 'name', $elm$json$Json$Decode$string),
 	A2(
 		$elm$json$Json$Decode$field,
 		'columns',
-		$elm$json$Json$Decode$list($author$project$Dashboard$tableColumnDecoder)));
-var $author$project$Dashboard$tablesDecoder = $elm$json$Json$Decode$list($author$project$Dashboard$tableDecoder);
+		$elm$json$Json$Decode$list($author$project$Models$DataSource$tableColumnDecoder)));
+var $author$project$Models$DataSource$tablesDecoder = $elm$json$Json$Decode$list($author$project$Models$DataSource$tableDecoder);
 var $author$project$Page$DashboardPage$getDataSourceTables = function (dashboardId) {
 	return $elm$http$Http$post(
 		{
@@ -6941,354 +6953,17 @@ var $author$project$Page$DashboardPage$getDataSourceTables = function (dashboard
 						[
 							_Utils_Tuple2(
 							'dashboard_id',
-							$author$project$Dashboard$idEncoder(dashboardId))
+							$author$project$Models$Dashboard$idEncoder(dashboardId))
 						]))),
 			expect: A2(
 				$elm$http$Http$expectJson,
 				A2($elm$core$Basics$composeL, $author$project$Page$DashboardPage$TablesReceived, $krisajenkins$remotedata$RemoteData$fromResult),
-				$author$project$Dashboard$tablesDecoder),
+				$author$project$Models$DataSource$tablesDecoder),
 			url: 'http://127.0.0.1:6969/get-data-source-tables'
 		});
 };
-var $krisajenkins$remotedata$RemoteData$map = F2(
-	function (f, data) {
-		switch (data.$) {
-			case 'Success':
-				var value = data.a;
-				return $krisajenkins$remotedata$RemoteData$Success(
-					f(value));
-			case 'Loading':
-				return $krisajenkins$remotedata$RemoteData$Loading;
-			case 'NotAsked':
-				return $krisajenkins$remotedata$RemoteData$NotAsked;
-			default:
-				var error = data.a;
-				return $krisajenkins$remotedata$RemoteData$Failure(error);
-		}
-	});
 var $elm$json$Json$Encode$string = _Json_wrap;
-var $author$project$Page$DashboardPage$addWidgetEncoder = function (widget) {
-	return $elm$json$Json$Encode$object(
-		_List_fromArray(
-			[
-				_Utils_Tuple2(
-				'widget_type',
-				$elm$json$Json$Encode$string(widget.widget_type)),
-				_Utils_Tuple2(
-				'widget_id',
-				$elm$json$Json$Encode$int(widget.widget_id)),
-				_Utils_Tuple2(
-				'title',
-				$elm$json$Json$Encode$string(widget.title)),
-				_Utils_Tuple2(
-				'table',
-				$elm$json$Json$Encode$string(widget.table)),
-				_Utils_Tuple2(
-				'data_column',
-				$elm$json$Json$Encode$string(widget.data_column))
-			]));
-};
-var $author$project$Page$DashboardPage$addWidget = F2(
-	function (widget, dashboardId) {
-		return $elm$http$Http$post(
-			{
-				body: $elm$http$Http$jsonBody(
-					$elm$json$Json$Encode$object(
-						_List_fromArray(
-							[
-								_Utils_Tuple2(
-								'dashboard_id',
-								$author$project$Dashboard$idEncoder(dashboardId)),
-								_Utils_Tuple2(
-								'widget',
-								$author$project$Page$DashboardPage$addWidgetEncoder(widget))
-							]))),
-				expect: A2(
-					$elm$http$Http$expectJson,
-					A2($elm$core$Basics$composeL, $author$project$Page$DashboardPage$DashboardReceived, $krisajenkins$remotedata$RemoteData$fromResult),
-					$author$project$Dashboard$dashboardDecoder),
-				url: 'http://127.0.0.1:6969/add-widget'
-			});
-	});
-var $elm_community$list_extra$List$Extra$find = F2(
-	function (predicate, list) {
-		find:
-		while (true) {
-			if (!list.b) {
-				return $elm$core$Maybe$Nothing;
-			} else {
-				var first = list.a;
-				var rest = list.b;
-				if (predicate(first)) {
-					return $elm$core$Maybe$Just(first);
-				} else {
-					var $temp$predicate = predicate,
-						$temp$list = rest;
-					predicate = $temp$predicate;
-					list = $temp$list;
-					continue find;
-				}
-			}
-		}
-	});
-var $krisajenkins$remotedata$RemoteData$withDefault = F2(
-	function (_default, data) {
-		if (data.$ === 'Success') {
-			var x = data.a;
-			return x;
-		} else {
-			return _default;
-		}
-	});
-var $author$project$Page$DashboardPage$updateForm = F2(
-	function (formMsg, model) {
-		switch (formMsg.$) {
-			case 'Cancel':
-				return _Utils_Tuple2(
-					_Utils_update(
-						model,
-						{showAddWidgetForm: false}),
-					$elm$core$Platform$Cmd$none);
-			case 'TableSelected':
-				var tableName = formMsg.a;
-				var selectedTable = A2(
-					$elm_community$list_extra$List$Extra$find,
-					function (table) {
-						return _Utils_eq(table.name, tableName);
-					},
-					A2($krisajenkins$remotedata$RemoteData$withDefault, _List_Nil, model.tables));
-				var newWidget = model.newWidget;
-				var updatedWidget = _Utils_update(
-					newWidget,
-					{table: tableName});
-				if (selectedTable.$ === 'Just') {
-					var table = selectedTable.a;
-					return _Utils_Tuple2(
-						_Utils_update(
-							model,
-							{formButtonsDisabled: false, newWidget: updatedWidget, selectedTable: table}),
-						$elm$core$Platform$Cmd$none);
-				} else {
-					return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
-				}
-			case 'ColumnToggled':
-				var columnName = formMsg.a;
-				var newWidget = model.newWidget;
-				var updatedWidget = _Utils_update(
-					newWidget,
-					{data_column: columnName});
-				return model.formButtonsDisabled ? _Utils_Tuple2(
-					_Utils_update(
-						model,
-						{formButtonsDisabled: false, newWidget: updatedWidget}),
-					$elm$core$Platform$Cmd$none) : _Utils_Tuple2(
-					_Utils_update(
-						model,
-						{formButtonsDisabled: true, newWidget: updatedWidget}),
-					$elm$core$Platform$Cmd$none);
-			case 'WidgetTypeSelected':
-				var widgetType = formMsg.a;
-				var newWidget = model.newWidget;
-				var updatedWidget = _Utils_update(
-					newWidget,
-					{widget_type: widgetType});
-				return _Utils_Tuple2(
-					_Utils_update(
-						model,
-						{newWidget: updatedWidget}),
-					$elm$core$Platform$Cmd$none);
-			default:
-				var _v2 = model.dashboard;
-				if (_v2.$ === 'Success') {
-					var dashboardData = _v2.a;
-					return _Utils_Tuple2(
-						_Utils_update(
-							model,
-							{formButtonsDisabled: false, newWidget: $author$project$Page$DashboardPage$emptyWidget, showAddWidgetForm: false}),
-						A2($author$project$Page$DashboardPage$addWidget, model.newWidget, dashboardData.dashboard_id));
-				} else {
-					return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
-				}
-		}
-	});
-var $author$project$Page$DashboardPage$update = F2(
-	function (msg, model) {
-		switch (msg.$) {
-			case 'DashboardReceived':
-				var response = msg.a;
-				return _Utils_Tuple2(
-					_Utils_update(
-						model,
-						{dashboard: response, tables: $krisajenkins$remotedata$RemoteData$NotAsked, widgetsData: _List_Nil}),
-					function () {
-						if (response.$ === 'Success') {
-							var dashboard = response.a;
-							return $author$project$Page$DashboardPage$getDataSourceTables(dashboard.dashboard_id);
-						} else {
-							return $elm$core$Platform$Cmd$none;
-						}
-					}());
-			case 'PieDataReceived':
-				var response = msg.a;
-				return _Utils_Tuple2(
-					_Utils_update(
-						model,
-						{
-							widgetsData: _Utils_ap(
-								model.widgetsData,
-								_List_fromArray(
-									[
-										A2(
-										$krisajenkins$remotedata$RemoteData$map,
-										function (pieData) {
-											return $author$project$Dashboard$Piedata(pieData);
-										},
-										response)
-									]))
-						}),
-					$elm$core$Platform$Cmd$none);
-			case 'HistogramDataReceived':
-				var response = msg.a;
-				return _Utils_Tuple2(
-					_Utils_update(
-						model,
-						{
-							widgetsData: _Utils_ap(
-								model.widgetsData,
-								_List_fromArray(
-									[
-										A2(
-										$krisajenkins$remotedata$RemoteData$map,
-										function (histogramData) {
-											return $author$project$Dashboard$Histogramdata(histogramData);
-										},
-										response)
-									]))
-						}),
-					$elm$core$Platform$Cmd$none);
-			case 'TablesReceived':
-				var response = msg.a;
-				if ((response.$ === 'Success') && response.a.b) {
-					var _v3 = response.a;
-					var head = _v3.a;
-					var newWidget = model.newWidget;
-					var updatedWidget = _Utils_update(
-						newWidget,
-						{table: head.name});
-					return _Utils_Tuple2(
-						_Utils_update(
-							model,
-							{newWidget: updatedWidget, selectedTable: head, tables: response}),
-						$author$project$Page$DashboardPage$fetchWidgetsData(model));
-				} else {
-					return _Utils_Tuple2(
-						_Utils_update(
-							model,
-							{tables: response}),
-						$author$project$Page$DashboardPage$fetchWidgetsData(model));
-				}
-			case 'ShowForm':
-				return _Utils_Tuple2(
-					_Utils_update(
-						model,
-						{showAddWidgetForm: true}),
-					$elm$core$Platform$Cmd$none);
-			default:
-				var formMsg = msg.a;
-				return A2($author$project$Page$DashboardPage$updateForm, formMsg, model);
-		}
-	});
-var $author$project$Error$buildErrorMessage = function (httpError) {
-	switch (httpError.$) {
-		case 'BadUrl':
-			var message = httpError.a;
-			return message;
-		case 'Timeout':
-			return 'Server is taking too long to respond. Please try again later.';
-		case 'NetworkError':
-			return 'Unable to reach server.';
-		case 'BadStatus':
-			var statusCode = httpError.a;
-			return 'Request failed with status code: ' + $elm$core$String$fromInt(statusCode);
-		default:
-			var message = httpError.a;
-			return message;
-	}
-};
-var $author$project$Page$ListDashboards$DashboardDeleted = function (a) {
-	return {$: 'DashboardDeleted', a: a};
-};
-var $author$project$Page$ListDashboards$deleteDashboard = function (dashboardId) {
-	return $elm$http$Http$post(
-		{
-			body: $elm$http$Http$jsonBody(
-				$elm$json$Json$Encode$object(
-					_List_fromArray(
-						[
-							_Utils_Tuple2(
-							'dashboard_id',
-							$author$project$Dashboard$idEncoder(dashboardId))
-						]))),
-			expect: A2($elm$http$Http$expectJson, $author$project$Page$ListDashboards$DashboardDeleted, $author$project$Dashboard$dashboardsDecoder),
-			url: 'http://127.0.0.1:6969/delete-dashboard'
-		});
-};
-var $author$project$Dashboard$idToString = function (_v0) {
-	var id = _v0.a;
-	return $elm$core$String$fromInt(id);
-};
-var $author$project$Route$routeToString = function (route) {
-	switch (route.$) {
-		case 'NotFound':
-			return '/not-found';
-		case 'Dashboards':
-			return '/dashboards';
-		default:
-			var dashboardId = route.a;
-			return '/dashboards/' + $author$project$Dashboard$idToString(dashboardId);
-	}
-};
-var $author$project$Route$pushUrl = F2(
-	function (route, navKey) {
-		return A2(
-			$elm$browser$Browser$Navigation$pushUrl,
-			navKey,
-			$author$project$Route$routeToString(route));
-	});
-var $author$project$Page$ListDashboards$DashboardCreated = function (a) {
-	return {$: 'DashboardCreated', a: a};
-};
-var $author$project$Dashboard$dataSourceEncoder = function (dataSource) {
-	return $elm$json$Json$Encode$object(
-		_List_fromArray(
-			[
-				_Utils_Tuple2(
-				'host',
-				$elm$json$Json$Encode$string(dataSource.host)),
-				_Utils_Tuple2(
-				'port',
-				$elm$json$Json$Encode$int(dataSource.portNumber)),
-				_Utils_Tuple2(
-				'username',
-				$elm$json$Json$Encode$string(dataSource.username)),
-				_Utils_Tuple2(
-				'password',
-				$elm$json$Json$Encode$string(dataSource.password)),
-				_Utils_Tuple2(
-				'database',
-				$elm$json$Json$Encode$string(dataSource.database))
-			]));
-};
-var $elm$json$Json$Encode$list = F2(
-	function (func, entries) {
-		return _Json_wrap(
-			A3(
-				$elm$core$List$foldl,
-				_Json_addEntry(func),
-				_Json_emptyArray(_Utils_Tuple0),
-				entries));
-	});
-var $author$project$Dashboard$widgetEncoder = function (widget) {
+var $author$project$Models$Widgets$widgetEncoder = function (widget) {
 	if (widget.$ === 'Pie') {
 		var widget_id = widget.a.widget_id;
 		var title = widget.a.title;
@@ -7339,30 +7014,359 @@ var $author$project$Dashboard$widgetEncoder = function (widget) {
 				]));
 	}
 };
-var $author$project$Dashboard$dashboardEncoder = function (dashboard) {
+var $author$project$Page$DashboardPage$addWidget = F2(
+	function (widget, dashboardId) {
+		return $elm$http$Http$post(
+			{
+				body: $elm$http$Http$jsonBody(
+					$elm$json$Json$Encode$object(
+						_List_fromArray(
+							[
+								_Utils_Tuple2(
+								'dashboard_id',
+								$author$project$Models$Dashboard$idEncoder(dashboardId)),
+								_Utils_Tuple2(
+								'widget',
+								$author$project$Models$Widgets$widgetEncoder(widget))
+							]))),
+				expect: A2(
+					$elm$http$Http$expectJson,
+					A2($elm$core$Basics$composeL, $author$project$Page$DashboardPage$DashboardReceived, $krisajenkins$remotedata$RemoteData$fromResult),
+					$author$project$Models$Dashboard$dashboardDecoder),
+				url: 'http://127.0.0.1:6969/add-widget'
+			});
+	});
+var $elm$core$Basics$not = _Basics_not;
+var $author$project$Page$DashboardPage$toggleColumn = F2(
+	function (columnName, model) {
+		var updatedWidget = function () {
+			var _v0 = model.newWidget;
+			if (_v0.$ === 'Pie') {
+				var data = _v0.a;
+				return $author$project$Models$Widgets$Pie(
+					_Utils_update(
+						data,
+						{data_column: columnName}));
+			} else {
+				var data = _v0.a;
+				return $author$project$Models$Widgets$Histogram(
+					_Utils_update(
+						data,
+						{data_column: columnName}));
+			}
+		}();
+		var isFormDisabled = !model.formButtonsDisabled;
+		return _Utils_Tuple2(
+			_Utils_update(
+				model,
+				{formButtonsDisabled: isFormDisabled, newWidget: updatedWidget}),
+			$elm$core$Platform$Cmd$none);
+	});
+var $elm_community$list_extra$List$Extra$find = F2(
+	function (predicate, list) {
+		find:
+		while (true) {
+			if (!list.b) {
+				return $elm$core$Maybe$Nothing;
+			} else {
+				var first = list.a;
+				var rest = list.b;
+				if (predicate(first)) {
+					return $elm$core$Maybe$Just(first);
+				} else {
+					var $temp$predicate = predicate,
+						$temp$list = rest;
+					predicate = $temp$predicate;
+					list = $temp$list;
+					continue find;
+				}
+			}
+		}
+	});
+var $krisajenkins$remotedata$RemoteData$withDefault = F2(
+	function (_default, data) {
+		if (data.$ === 'Success') {
+			var x = data.a;
+			return x;
+		} else {
+			return _default;
+		}
+	});
+var $author$project$Page$DashboardPage$updateTableSelection = F2(
+	function (tableName, model) {
+		var updatedWidget = function () {
+			var _v1 = model.newWidget;
+			if (_v1.$ === 'Pie') {
+				var data = _v1.a;
+				return $author$project$Models$Widgets$Pie(
+					_Utils_update(
+						data,
+						{table: tableName}));
+			} else {
+				var data = _v1.a;
+				return $author$project$Models$Widgets$Histogram(
+					_Utils_update(
+						data,
+						{table: tableName}));
+			}
+		}();
+		var selectedTable = A2(
+			$elm_community$list_extra$List$Extra$find,
+			function (table) {
+				return _Utils_eq(table.name, tableName);
+			},
+			A2($krisajenkins$remotedata$RemoteData$withDefault, _List_Nil, model.tables));
+		if (selectedTable.$ === 'Just') {
+			var table = selectedTable.a;
+			return _Utils_Tuple2(
+				_Utils_update(
+					model,
+					{formButtonsDisabled: false, newWidget: updatedWidget, selectedTable: table}),
+				$elm$core$Platform$Cmd$none);
+		} else {
+			return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+		}
+	});
+var $author$project$Page$DashboardPage$updateForm = F2(
+	function (formMsg, model) {
+		switch (formMsg.$) {
+			case 'Cancel':
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{showAddWidgetForm: false}),
+					$elm$core$Platform$Cmd$none);
+			case 'TableSelected':
+				var tableName = formMsg.a;
+				return A2($author$project$Page$DashboardPage$updateTableSelection, tableName, model);
+			case 'ColumnToggled':
+				var columnName = formMsg.a;
+				return A2($author$project$Page$DashboardPage$toggleColumn, columnName, model);
+			case 'WidgetTypeSelected':
+				var widgetType = formMsg.a;
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{
+							newWidget: $author$project$Page$DashboardPage$emptyWidget(widgetType)
+						}),
+					$elm$core$Platform$Cmd$none);
+			default:
+				var _v1 = model.dashboard;
+				if (_v1.$ === 'Success') {
+					var dashboardData = _v1.a;
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{
+								formButtonsDisabled: false,
+								newWidget: $author$project$Page$DashboardPage$emptyWidget(''),
+								showAddWidgetForm: false
+							}),
+						A2($author$project$Page$DashboardPage$addWidget, model.newWidget, dashboardData.dashboard_id));
+				} else {
+					return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+				}
+		}
+	});
+var $krisajenkins$remotedata$RemoteData$map = F2(
+	function (f, data) {
+		switch (data.$) {
+			case 'Success':
+				var value = data.a;
+				return $krisajenkins$remotedata$RemoteData$Success(
+					f(value));
+			case 'Loading':
+				return $krisajenkins$remotedata$RemoteData$Loading;
+			case 'NotAsked':
+				return $krisajenkins$remotedata$RemoteData$NotAsked;
+			default:
+				var error = data.a;
+				return $krisajenkins$remotedata$RemoteData$Failure(error);
+		}
+	});
+var $author$project$Page$DashboardPage$updateWidgetData = F3(
+	function (model, response, constructor) {
+		return _Utils_Tuple2(
+			_Utils_update(
+				model,
+				{
+					widgetsData: _Utils_ap(
+						model.widgetsData,
+						_List_fromArray(
+							[
+								A2($krisajenkins$remotedata$RemoteData$map, constructor, response)
+							]))
+				}),
+			$elm$core$Platform$Cmd$none);
+	});
+var $author$project$Page$DashboardPage$update = F2(
+	function (msg, model) {
+		switch (msg.$) {
+			case 'DashboardReceived':
+				var response = msg.a;
+				var cmd = function () {
+					if (response.$ === 'Success') {
+						var dashboard = response.a;
+						return $author$project$Page$DashboardPage$getDataSourceTables(dashboard.dashboard_id);
+					} else {
+						return $elm$core$Platform$Cmd$none;
+					}
+				}();
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{dashboard: response, tables: $krisajenkins$remotedata$RemoteData$NotAsked, widgetsData: _List_Nil}),
+					cmd);
+			case 'PieDataReceived':
+				var response = msg.a;
+				return A3($author$project$Page$DashboardPage$updateWidgetData, model, response, $author$project$Models$DataSource$Piedata);
+			case 'HistogramDataReceived':
+				var response = msg.a;
+				return A3($author$project$Page$DashboardPage$updateWidgetData, model, response, $author$project$Models$DataSource$Histogramdata);
+			case 'TablesReceived':
+				var response = msg.a;
+				var newModel = function () {
+					if ((response.$ === 'Success') && response.a.b) {
+						var _v3 = response.a;
+						var head = _v3.a;
+						return _Utils_update(
+							model,
+							{selectedTable: head, tables: response});
+					} else {
+						return _Utils_update(
+							model,
+							{tables: response});
+					}
+				}();
+				return _Utils_Tuple2(
+					newModel,
+					$author$project$Page$DashboardPage$fetchWidgetsData(model));
+			case 'ShowForm':
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{showAddWidgetForm: true}),
+					$elm$core$Platform$Cmd$none);
+			default:
+				var formMsg = msg.a;
+				return A2($author$project$Page$DashboardPage$updateForm, formMsg, model);
+		}
+	});
+var $author$project$Error$buildErrorMessage = function (httpError) {
+	switch (httpError.$) {
+		case 'BadUrl':
+			var message = httpError.a;
+			return message;
+		case 'Timeout':
+			return 'Server is taking too long to respond. Please try again later.';
+		case 'NetworkError':
+			return 'Unable to reach server.';
+		case 'BadStatus':
+			var statusCode = httpError.a;
+			return 'Request failed with status code: ' + $elm$core$String$fromInt(statusCode);
+		default:
+			var message = httpError.a;
+			return message;
+	}
+};
+var $author$project$Page$ListDashboards$DashboardDeleted = function (a) {
+	return {$: 'DashboardDeleted', a: a};
+};
+var $author$project$Page$ListDashboards$deleteDashboard = function (dashboardId) {
+	return $elm$http$Http$post(
+		{
+			body: $elm$http$Http$jsonBody(
+				$elm$json$Json$Encode$object(
+					_List_fromArray(
+						[
+							_Utils_Tuple2(
+							'dashboard_id',
+							$author$project$Models$Dashboard$idEncoder(dashboardId))
+						]))),
+			expect: A2($elm$http$Http$expectJson, $author$project$Page$ListDashboards$DashboardDeleted, $author$project$Models$Dashboard$dashboardsDecoder),
+			url: 'http://127.0.0.1:6969/delete-dashboard'
+		});
+};
+var $author$project$Models$Dashboard$idToString = function (_v0) {
+	var id = _v0.a;
+	return $elm$core$String$fromInt(id);
+};
+var $author$project$Route$routeToString = function (route) {
+	switch (route.$) {
+		case 'NotFound':
+			return '/not-found';
+		case 'Dashboards':
+			return '/dashboards';
+		default:
+			var dashboardId = route.a;
+			return '/dashboards/' + $author$project$Models$Dashboard$idToString(dashboardId);
+	}
+};
+var $author$project$Route$pushUrl = F2(
+	function (route, navKey) {
+		return A2(
+			$elm$browser$Browser$Navigation$pushUrl,
+			navKey,
+			$author$project$Route$routeToString(route));
+	});
+var $author$project$Page$ListDashboards$DashboardCreated = function (a) {
+	return {$: 'DashboardCreated', a: a};
+};
+var $author$project$Models$DataSource$dataSourceEncoder = function (dataSource) {
+	return $elm$json$Json$Encode$object(
+		_List_fromArray(
+			[
+				_Utils_Tuple2(
+				'host',
+				$elm$json$Json$Encode$string(dataSource.host)),
+				_Utils_Tuple2(
+				'port',
+				$elm$json$Json$Encode$int(dataSource.portNumber)),
+				_Utils_Tuple2(
+				'username',
+				$elm$json$Json$Encode$string(dataSource.username)),
+				_Utils_Tuple2(
+				'password',
+				$elm$json$Json$Encode$string(dataSource.password)),
+				_Utils_Tuple2(
+				'database',
+				$elm$json$Json$Encode$string(dataSource.database))
+			]));
+};
+var $elm$json$Json$Encode$list = F2(
+	function (func, entries) {
+		return _Json_wrap(
+			A3(
+				$elm$core$List$foldl,
+				_Json_addEntry(func),
+				_Json_emptyArray(_Utils_Tuple0),
+				entries));
+	});
+var $author$project$Models$Dashboard$dashboardEncoder = function (dashboard) {
 	return $elm$json$Json$Encode$object(
 		_List_fromArray(
 			[
 				_Utils_Tuple2(
 				'dashboard_id',
-				$author$project$Dashboard$idEncoder(dashboard.dashboard_id)),
+				$author$project$Models$Dashboard$idEncoder(dashboard.dashboard_id)),
 				_Utils_Tuple2(
 				'title',
 				$elm$json$Json$Encode$string(dashboard.title)),
 				_Utils_Tuple2(
 				'widgets',
-				A2($elm$json$Json$Encode$list, $author$project$Dashboard$widgetEncoder, dashboard.widgets)),
+				A2($elm$json$Json$Encode$list, $author$project$Models$Widgets$widgetEncoder, dashboard.widgets)),
 				_Utils_Tuple2(
 				'dataSource',
-				$author$project$Dashboard$dataSourceEncoder(dashboard.dataSource))
+				$author$project$Models$DataSource$dataSourceEncoder(dashboard.dataSource))
 			]));
 };
 var $author$project$Page$ListDashboards$create_dashboard = function (dashboard) {
 	return $elm$http$Http$post(
 		{
 			body: $elm$http$Http$jsonBody(
-				$author$project$Dashboard$dashboardEncoder(dashboard)),
-			expect: A2($elm$http$Http$expectJson, $author$project$Page$ListDashboards$DashboardCreated, $author$project$Dashboard$dashboardDecoder),
+				$author$project$Models$Dashboard$dashboardEncoder(dashboard)),
+			expect: A2($elm$http$Http$expectJson, $author$project$Page$ListDashboards$DashboardCreated, $author$project$Models$Dashboard$dashboardDecoder),
 			url: 'http://127.0.0.1:6969/create-dashboard'
 		});
 };
@@ -7738,16 +7742,6 @@ var $author$project$Page$DashboardPage$viewFetchError = function (errorMessage) 
 var $author$project$Page$DashboardPage$ColumnToggled = function (a) {
 	return {$: 'ColumnToggled', a: a};
 };
-var $elm$json$Json$Encode$bool = _Json_wrap;
-var $elm$html$Html$Attributes$boolProperty = F2(
-	function (key, bool) {
-		return A2(
-			_VirtualDom_property,
-			key,
-			$elm$json$Json$Encode$bool(bool));
-	});
-var $elm$html$Html$Attributes$disabled = $elm$html$Html$Attributes$boolProperty('disabled');
-var $elm$core$Basics$neq = _Utils_notEqual;
 var $author$project$Page$DashboardPage$viewTableColumns = function (model) {
 	return A2(
 		$elm$html$Html$div,
@@ -7765,9 +7759,7 @@ var $author$project$Page$DashboardPage$viewTableColumns = function (model) {
 							_List_fromArray(
 								[
 									$elm$html$Html$Events$onClick(
-									A2($elm$core$Basics$composeL, $author$project$Page$DashboardPage$FormChanged, $author$project$Page$DashboardPage$ColumnToggled)(col.name)),
-									$elm$html$Html$Attributes$disabled(
-									(!_Utils_eq(model.newWidget.data_column, col.name)) && model.formButtonsDisabled)
+									A2($elm$core$Basics$composeL, $author$project$Page$DashboardPage$FormChanged, $author$project$Page$DashboardPage$ColumnToggled)(col.name))
 								]),
 							_List_fromArray(
 								[
@@ -9566,7 +9558,7 @@ var $author$project$Widgets$PieChart$pieLabel = F2(
 						])),
 					$elm_community$typed_svg$TypedSvg$Attributes$textAnchor($elm_community$typed_svg$TypedSvg$Types$AnchorMiddle),
 					$elm_community$typed_svg$TypedSvg$Attributes$fontSize(
-					$elm_community$typed_svg$TypedSvg$Types$em(0.40))
+					$elm_community$typed_svg$TypedSvg$Types$em(0.4))
 				]),
 			_List_fromArray(
 				[
@@ -9605,7 +9597,6 @@ var $folkertdev$one_true_path_experiment$LowLevel$Command$MoveTo = function (a) 
 	return {$: 'MoveTo', a: a};
 };
 var $folkertdev$one_true_path_experiment$LowLevel$Command$moveTo = $folkertdev$one_true_path_experiment$LowLevel$Command$MoveTo;
-var $elm$core$Basics$not = _Basics_not;
 var $folkertdev$one_true_path_experiment$SubPath$SubPath = function (a) {
 	return {$: 'SubPath', a: a};
 };

@@ -2,13 +2,14 @@ module Widgets.PieChart exposing (..)
 
 import Array exposing (Array)
 import Color exposing (Color)
+import Models.DataSource
 import Path
 import Shape exposing (defaultPieConfig)
 import TypedSvg exposing (g, svg, text_)
 import TypedSvg.Attributes exposing (fill, fontSize, stroke, textAnchor, transform, viewBox)
 import TypedSvg.Core exposing (Svg, text)
 import TypedSvg.Types exposing (AnchorAlignment(..), Paint(..), Transform(..), em)
-import Dashboard 
+
 
 size : Float
 size =
@@ -47,16 +48,17 @@ pieLabel slice ( label, _ ) =
     text_
         [ transform [ Translate x y ]
         , textAnchor AnchorMiddle
-        , fontSize (em 0.40)
+        , fontSize (em 0.4)
         ]
         [ text label ]
 
 
-view : List ( Dashboard.PieData ) -> Svg msg
+view : List Models.DataSource.PieData -> Svg msg
 view data =
     let
         model =
             data |> List.map (\datum -> ( datum.title, toFloat datum.count ))
+
         pieData =
             model |> List.map Tuple.second |> Shape.pie { defaultPieConfig | outerRadius = radius }
     in
@@ -66,5 +68,3 @@ view data =
             , g [] <| List.map2 pieLabel pieData model
             ]
         ]
-
-

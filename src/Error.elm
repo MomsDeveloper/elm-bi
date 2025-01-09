@@ -2,6 +2,7 @@ module Error exposing (buildErrorMessage)
 
 import Http
 
+
 buildErrorMessage : Http.Error -> String
 buildErrorMessage httpError =
     case httpError of

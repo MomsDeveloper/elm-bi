@@ -10,11 +10,13 @@ import TypedSvg.Attributes.InPx exposing (height, width, x, y)
 import TypedSvg.Core exposing (Svg)
 import TypedSvg.Types exposing (Paint(..), Transform(..))
 
+
 histogram : List Float -> List (Bin Float Float)
 histogram model =
     Histogram.float
         |> Histogram.withDomain ( 0, 20 )
         |> Histogram.compute model
+
 
 w : Float
 w =
@@ -24,6 +26,7 @@ w =
 h : Float
 h =
     450
+
 
 padding : Float
 padding =
@@ -43,6 +46,7 @@ yScaleFromBins bins =
         |> toFloat
         |> Tuple.pair 0
         |> Scale.linear ( h - 2 * padding, 0 )
+
 
 xAxis : Svg msg
 xAxis =
