@@ -1,6 +1,6 @@
 module Dashboard exposing (..)
 
-import Json.Decode exposing (Decoder, field, int, string, nullable, list, map2, map4, map5, float, andThen, map, map3)
+import Json.Decode exposing (Decoder, field, int, string, list, map2, map4, map5, float, andThen, map)
 import Json.Encode exposing (Value)
 import Url.Parser exposing (Parser, custom)
 
@@ -169,3 +169,31 @@ pieDataDecoder =
 histogramDataDecoder : Decoder (List Float)
 histogramDataDecoder =
     field "data" (list float)
+
+
+type alias Table = 
+  {
+    name : String
+    , columns : List TableColumn
+  }
+
+type alias TableColumn = 
+  { name : String
+  , dataType : String
+  }
+
+tablesDecoder : Decoder (List Table)
+tablesDecoder =
+  list tableDecoder
+
+tableDecoder : Decoder Table
+tableDecoder =
+  map2 Table
+    (field "name" string)
+    (field "columns" (list tableColumnDecoder))
+
+tableColumnDecoder : Decoder TableColumn
+tableColumnDecoder =
+  map2 TableColumn
+    (field "name" string)
+    (field "dataType" string)
