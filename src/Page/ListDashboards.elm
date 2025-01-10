@@ -1,21 +1,22 @@
 module Page.ListDashboards exposing (Model, Msg, init, update, view)
 
 import Browser.Navigation as Nav
-import Models.Dashboard as Dashboard exposing (..)
-import Models.DataSource exposing (..)
-import Models.Widgets exposing (..)
 import Error exposing (buildErrorMessage)
 import Html exposing (..)
 import Html.Attributes exposing (class, href, rel, type_)
 import Html.Events exposing (..)
 import Http exposing (..)
+import Json.Decode exposing (Decoder, field, int, list, map2, string)
 import Json.Encode
+import Models.Dashboard as Dashboard exposing (..)
+import Models.DataSource exposing (..)
+import Models.Widgets exposing (..)
 import RemoteData exposing (WebData)
 import Route
 
 
 type alias Model =
-    { dashboards : WebData (List Dashboard)
+    { dashboards : WebData (List DashboardInfo)
     , newDashboard : Dashboard
     , showAddDashboardForm : Bool
     , deleteError : Maybe String
@@ -26,9 +27,9 @@ type alias Model =
 
 type Msg
     = FetchDashboards
-    | DashboardsReceived (WebData (List Dashboard))
+    | DashboardsReceived (WebData (List DashboardInfo))
     | DeleteDashboard DashboardId
-    | DashboardDeleted (Result Http.Error (List Dashboard))
+    | DashboardDeleted (WebData (List DashboardInfo))
     | ShowForm
     | FormChanged FormMsg
     | DashboardCreated (Result Http.Error Dashboard)
@@ -44,6 +45,26 @@ type FormMsg
     | UpdateDatabase String
     | Cancel
     | AddNewDashboard
+
+
+type alias DashboardInfo =
+    { dashboard_id : DashboardId
+    , title : String
+    }
+
+
+dashBoardsInfoDecoder : Decoder (List DashboardInfo)
+dashBoardsInfoDecoder =
+    list
+        (map2
+            (\dashboard_id title ->
+                { dashboard_id = DashboardId dashboard_id
+                , title = title
+                }
+            )
+            (field "dashboard_id" int)
+            (field "title" string)
+        )
 
 
 init : Nav.Key -> ( Model, Cmd Msg )
@@ -74,11 +95,8 @@ update msg model =
         DeleteDashboard dashboardId ->
             ( model, deleteDashboard dashboardId )
 
-        DashboardDeleted (Ok _) ->
-            ( model, fetchDashboards )
-
-        DashboardDeleted (Err httpError) ->
-            ( { model | deleteError = Just (buildErrorMessage httpError) }, Cmd.none )
+        DashboardDeleted response ->
+            ( { model | dashboards = response, deleteError = Nothing }, Cmd.none )
 
         DashboardCreated (Ok dashboard) ->
             ( model, Route.pushUrl (Route.Dashboard dashboard.dashboard_id) model.navKey )
@@ -200,7 +218,7 @@ emptyDashboard : Dashboard
 emptyDashboard =
     { dashboard_id = DashboardId -1
     , title = ""
-    , dataSource = { host = "", portNumber = 0, username = "", password = "", database = "" }
+    , dataSource = { host = "", portNumber = 0, username = "", password = "", database = "", tables = [] }
     , widgets = []
     }
 
@@ -296,7 +314,7 @@ viewAddDashboardButton =
         [ text "+" ]
 
 
-viewDashboards : WebData (List Dashboard) -> Html Msg
+viewDashboards : WebData (List DashboardInfo) -> Html Msg
 viewDashboards dashboards =
     case dashboards of
         RemoteData.NotAsked ->
@@ -316,7 +334,7 @@ viewDashboards dashboards =
             viewFetchError (buildErrorMessage httpError)
 
 
-viewDashboard : Dashboard -> Html Msg
+viewDashboard : DashboardInfo -> Html Msg
 viewDashboard dashboard =
     tr []
         [ td [ class "dashboard-square", onClick (GoToDashboard dashboard.dashboard_id) ]
@@ -368,9 +386,9 @@ fetchDashboards : Cmd Msg
 fetchDashboards =
     Http.post
         { url = "http://127.0.0.1:6969/get-dashboards"
-        , body = Http.emptyBody
+        , body = Http.jsonBody (Json.Encode.object [])
         , expect =
-            dashboardsDecoder
+            dashBoardsInfoDecoder
                 |> Http.expectJson (RemoteData.fromResult >> DashboardsReceived)
         }
 
@@ -382,7 +400,9 @@ deleteDashboard dashboardId =
         , body =
             Http.jsonBody
                 (Json.Encode.object [ ( "dashboard_id", Dashboard.idEncoder dashboardId ) ])
-        , expect = Http.expectJson DashboardDeleted dashboardsDecoder
+        , expect =
+            dashBoardsInfoDecoder
+                |> Http.expectJson (RemoteData.fromResult >> DashboardDeleted)
         }
 
 

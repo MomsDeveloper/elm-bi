@@ -9,6 +9,7 @@ import TypedSvg.Attributes exposing (class, fill, transform, viewBox)
 import TypedSvg.Attributes.InPx exposing (height, width, x, y)
 import TypedSvg.Core exposing (Svg)
 import TypedSvg.Types exposing (Paint(..), Transform(..))
+import Models.DataSource exposing (HistogramData)
 
 
 histogram : List Float -> List (Bin Float Float)
@@ -70,11 +71,11 @@ column yScale { length, x0, x1 } =
         []
 
 
-view : List Float -> Svg msg
+view : List HistogramData -> Svg msg
 view model =
     let
         bins =
-            histogram model
+            histogram (List.map .data model)
     in
     svg [ viewBox 0 0 w h ]
         [ g [ transform [ Translate (padding - 1) (h - padding) ] ]

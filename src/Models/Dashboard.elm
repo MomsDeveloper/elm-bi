@@ -2,8 +2,8 @@ module Models.Dashboard exposing (..)
 
 import Json.Decode exposing (Decoder, field, int, list, map, map4, string)
 import Json.Encode exposing (Value)
-import Models.Widgets exposing (Widget, widgetDecoder, widgetEncoder)
 import Models.DataSource exposing (..)
+import Models.Widgets exposing (Widget, widgetDecoder, widgetEncoder)
 import Url.Parser exposing (Parser, custom)
 
 

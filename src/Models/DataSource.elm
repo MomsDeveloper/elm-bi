@@ -1,7 +1,8 @@
 module Models.DataSource exposing (..)
 
-import Json.Decode exposing (Decoder, field, float, int, list, map2, string, map5)
+import Json.Decode exposing (Decoder, field, float, int, list, map, map2, map6, string)
 import Json.Encode exposing (Value)
+
 
 type alias DataSource =
     { host : String
@@ -9,17 +10,19 @@ type alias DataSource =
     , username : String
     , password : String
     , database : String
+    , tables : List Table
     }
 
 
 dataSourceDecoder : Decoder DataSource
 dataSourceDecoder =
-    map5 DataSource
+    map6 DataSource
         (field "host" string)
         (field "port" int)
         (field "username" string)
         (field "password" string)
         (field "database" string)
+        (field "tables" tablesDecoder)
 
 
 dataSourceEncoder : DataSource -> Value
@@ -30,6 +33,7 @@ dataSourceEncoder dataSource =
         , ( "username", Json.Encode.string dataSource.username )
         , ( "password", Json.Encode.string dataSource.password )
         , ( "database", Json.Encode.string dataSource.database )
+        , ( "tables", Json.Encode.list tableEncoder dataSource.tables )
         ]
 
 
@@ -57,6 +61,14 @@ tableDecoder =
         (field "columns" (list tableColumnDecoder))
 
 
+tableEncoder : Table -> Value
+tableEncoder table =
+    Json.Encode.object
+        [ ( "name", Json.Encode.string table.name )
+        , ( "columns", Json.Encode.list tableColumnEncoder table.columns )
+        ]
+
+
 tableColumnDecoder : Decoder TableColumn
 tableColumnDecoder =
     map2 TableColumn
@@ -64,9 +76,17 @@ tableColumnDecoder =
         (field "dataType" string)
 
 
+tableColumnEncoder : TableColumn -> Value
+tableColumnEncoder tableColumn =
+    Json.Encode.object
+        [ ( "name", Json.Encode.string tableColumn.name )
+        , ( "dataType", Json.Encode.string tableColumn.dataType )
+        ]
+
+
 type WidgetData
     = Piedata (List PieData)
-    | Histogramdata (List Float)
+    | Histogramdata (List HistogramData)
 
 
 type alias PieData =
@@ -75,11 +95,41 @@ type alias PieData =
     }
 
 
+type alias HistogramData =
+    { data : Float
+    }
+
+
 pieDataDecoder : Decoder (List PieData)
 pieDataDecoder =
-    field "data" (list (map2 PieData (field "title" string) (field "count" int)))
+    list (map2 PieData (field "title" string) (field "count" int))
 
 
-histogramDataDecoder : Decoder (List Float)
+pieDataEncoder : List PieData -> Value
+pieDataEncoder pieData =
+    Json.Encode.list pieDataToValue pieData
+
+
+pieDataToValue : PieData -> Value
+pieDataToValue pieData =
+    Json.Encode.object
+        [ ( "title", Json.Encode.string pieData.title )
+        , ( "count", Json.Encode.int pieData.count )
+        ]
+
+
+histogramDataDecoder : Decoder (List HistogramData)
 histogramDataDecoder =
-    field "data" (list float)
+    list (map HistogramData float)
+
+
+histogramDataEncoder : List HistogramData -> Value
+histogramDataEncoder histogramData =
+    Json.Encode.list histogramDataToValue histogramData
+
+
+histogramDataToValue : HistogramData -> Value
+histogramDataToValue histogramData =
+    Json.Encode.object
+        [ ( "data", Json.Encode.float histogramData.data )
+        ]
