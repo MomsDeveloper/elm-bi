@@ -1,43 +1,34 @@
 module Page.DashboardPage exposing (..)
 
 import Browser.Navigation as Nav
+import Components.AddWidgetForm as AddWidgetForm exposing (..)
+import Error exposing (buildErrorMessage)
+import Html exposing (..)
+import Html.Attributes exposing (class, href, rel)
+import Html.Events exposing (onClick)
+import Http exposing (..)
+import Json.Encode
 import Models.Dashboard as Dashboard exposing (..)
 import Models.DataSource exposing (..)
 import Models.Widgets exposing (..)
-import Error exposing (buildErrorMessage)
-import Html exposing (..)
-import Html.Attributes exposing (class, href, rel, value)
-import Html.Events exposing (onClick, onInput)
-import Http exposing (..)
-import Json.Encode
-import List.Extra
 import RemoteData exposing (WebData)
 import Widgets.Histogram
 import Widgets.PieChart
 
+
 type alias Model =
     { navKey : Nav.Key
     , dashboard : WebData Dashboard
+    , addWidgetForm : AddWidgetForm.Model
     , showAddWidgetForm : Bool
-    , selectedTable : Table
-    , isWidgetTypeSelected : Bool
-    , newWidget : Widget
     }
 
 
 type Msg
     = DashboardReceived (WebData Dashboard)
     | ShowForm
-    | FormChanged FormMsg
+    | WidgetFormChanged AddWidgetForm.Msg
     | DeleteWidget Int
-
-
-type FormMsg
-    = TableSelected String
-    | WidgetTypeSelected String
-    | ColumnToggled String
-    | Cancel
-    | AddNewWidget
 
 
 init : DashboardId -> Nav.Key -> ( Model, Cmd Msg )
@@ -49,10 +40,8 @@ initialModel : Nav.Key -> Model
 initialModel navKey =
     { navKey = navKey
     , dashboard = RemoteData.Loading
+    , addWidgetForm = AddWidgetForm.init []
     , showAddWidgetForm = False
-    , selectedTable = Table "" []
-    , isWidgetTypeSelected = False
-    , newWidget = emptyWidget "PieChart"
     }
 
 
@@ -63,14 +52,53 @@ update msg model =
             let
                 clearedModel =
                     initialModel model.navKey
+
+                updatedModel =
+                    case response of
+                        RemoteData.Success dashboardData ->
+                            { clearedModel
+                                | dashboard = response
+                                , addWidgetForm = AddWidgetForm.init dashboardData.dataSource.tables
+                            }
+
+                        _ ->
+                            { clearedModel | dashboard = response }
             in
-            ( { clearedModel | dashboard = response }, Cmd.none )
+            ( updatedModel, Cmd.none )
 
         ShowForm ->
             ( { model | showAddWidgetForm = True }, Cmd.none )
 
-        FormChanged formMsg ->
-            updateForm formMsg model
+        WidgetFormChanged formMsg ->
+            case formMsg of
+                AddWidgetForm.Cancel ->
+                    let
+                        updatedForm =
+                            AddWidgetForm.update formMsg model.addWidgetForm
+                    in
+                    ( { model | showAddWidgetForm = False, addWidgetForm = updatedForm }, Cmd.none )
+
+                AddWidgetForm.AddNewWidget ->
+                    case model.dashboard of
+                        RemoteData.Success dashboardData ->
+                            let
+                                widget =
+                                    model.addWidgetForm.widget
+
+                                dashboardId =
+                                    dashboardData.dashboard_id
+                            in
+                            ( { model | showAddWidgetForm = False }, addWidget widget dashboardId )
+
+                        _ ->
+                            ( { model | showAddWidgetForm = False }, Cmd.none )
+
+                _ ->
+                    let
+                        updatedForm =
+                            AddWidgetForm.update formMsg model.addWidgetForm
+                    in
+                    ( { model | addWidgetForm = updatedForm }, Cmd.none )
 
         DeleteWidget widgetId ->
             case model.dashboard of
@@ -80,97 +108,6 @@ update msg model =
                 _ ->
                     ( model, Cmd.none )
 
-updateForm : FormMsg -> Model -> ( Model, Cmd Msg )
-updateForm formMsg model =
-    case formMsg of
-        Cancel ->
-            let
-                clearedModel = clearWidgetForm model
-            in
-            ( { clearedModel | showAddWidgetForm = False }, Cmd.none )
-
-        TableSelected tableName ->
-            updateTableSelection tableName model
-
-        ColumnToggled columnName ->
-            toggleColumn columnName model
-
-        WidgetTypeSelected widgetType ->
-            ( { model | newWidget = emptyWidget widgetType, isWidgetTypeSelected = True }, Cmd.none )
-
-        AddNewWidget ->
-            case model.dashboard of
-                RemoteData.Success dashboardData ->
-                    let
-                        clearedModel =
-                            clearWidgetForm model
-                    in
-                    ( { clearedModel | showAddWidgetForm = False }
-                    , addWidget model.newWidget dashboardData.dashboard_id
-                    )
-
-                _ ->
-                    ( model, Cmd.none )
-
-
-clearWidgetForm : Model -> Model
-clearWidgetForm model =
-    { model | newWidget = emptyWidget "" , isWidgetTypeSelected = False, selectedTable = Table "" [] }
-
-emptyWidget : String -> Widget
-emptyWidget widgetType =
-    case widgetType of
-        "PieChart" ->
-            Pie { widget_id = 0, title = "", table = "", data_column = "", data = [] }
-
-        "Histogram" ->
-            Histogram { widget_id = 0, title = "", table = "", data_column = "", data = [] }
-
-        _ ->
-            Pie { widget_id = 0, title = "", table = "", data_column = "", data = [] }
-
-
-updateTableSelection : String -> Model -> ( Model, Cmd Msg )
-updateTableSelection tableName model =
-    let
-        selectedTable =
-            case model.dashboard of
-                RemoteData.Success dashboardData ->
-                    List.Extra.find (\table -> table.name == tableName) dashboardData.dataSource.tables
-
-                _ ->
-                    Nothing
-
-        updatedWidget =
-            case model.newWidget of
-                Pie data ->
-                    Pie { data | table = tableName }
-
-                Histogram data ->
-                    Histogram { data | table = tableName }
-    in
-    case selectedTable of
-        Just table ->
-            ( { model | selectedTable = table, newWidget = updatedWidget }, Cmd.none )
-
-        Nothing ->
-            ( model, Cmd.none )
-
-
-toggleColumn : String -> Model -> ( Model, Cmd Msg )
-toggleColumn columnName model =
-    let
-        updatedWidget =
-            case model.newWidget of
-                Pie data ->
-                    Pie { data | data_column = columnName }
-
-                Histogram data ->
-                    Histogram { data | data_column = columnName }
-
-    in
-    ( { model | newWidget = updatedWidget }, Cmd.none )
-
 
 view : Model -> Html Msg
 view model =
@@ -178,7 +115,7 @@ view model =
         [ h3 [] [ text "Widgets" ]
         , viewAddWidgetButton
         , if model.showAddWidgetForm then
-            viewAddWidgetForm model
+            Html.map WidgetFormChanged (AddWidgetForm.view model.addWidgetForm)
 
           else
             text ""
@@ -190,45 +127,6 @@ view model =
             []
         ]
 
-
-viewAddWidgetForm : Model -> Html Msg
-viewAddWidgetForm model =
-    case model.dashboard of
-        RemoteData.Success dashboardData ->
-            div [ class "add-widget form" ]
-                [ h3 [] [ text "Add Widget" ]
-                , div []
-                    [ select
-                        [ class "table-dropdown", onInput (FormChanged << WidgetTypeSelected) ]
-                        [ option [ value "PieChart" ] [ text "Pie Chart" ]
-                        , option [ value "Histogram" ] [ text "Histogram" ]
-                        ]
-                    ]
-                , if model.isWidgetTypeSelected then
-                    div []
-                        [ select
-                            [ class "table-dropdown", onInput (FormChanged << TableSelected) ]
-                            (List.map (\table -> option [ value table.name ] [ text table.name ]) dashboardData.dataSource.tables)
-                        , div [] [ text "Select columns:" ] 
-                        , viewTableColumns model.selectedTable
-                        ]
-                  else
-                    text ""
-                , button [ class "add-widget-button", onClick (FormChanged AddNewWidget) ] [ text "Add Widget" ]
-                , button [ class "cancel-button", onClick (FormChanged Cancel) ] [ text "Cancel" ]
-                ]
-            
-        _ ->
-            text ""
-
-
-viewTableColumns : Table -> Html Msg
-viewTableColumns table =
-    div []
-        [
-            select [ class "table-dropdown", onInput (FormChanged << ColumnToggled) ]
-                (List.map (\col -> option [ value col.name ] [ text col.name ]) table.columns)
-        ]
 
 viewAddWidgetButton : Html Msg
 viewAddWidgetButton =
@@ -263,16 +161,16 @@ viewWidget : Widget -> Html Msg
 viewWidget widget =
     case widget of
         Pie pieWidget ->
-            div [ class "widget-square" ] 
-            [ Widgets.PieChart.view pieWidget.data
-            , button [ class "delete-widget-button", onClick (DeleteWidget pieWidget.widget_id) ] [ text "Delete" ]
-            ]
+            div [ class "widget-square" ]
+                [ Widgets.PieChart.view pieWidget.data
+                , button [ class "delete-widget-button", onClick (DeleteWidget pieWidget.widget_id) ] [ text "Delete" ]
+                ]
 
         Histogram histogramWidget ->
-            div [ class "widget-square" ] 
-            [ Widgets.Histogram.view histogramWidget.data
-            , button [ class "delete-widget-button", onClick (DeleteWidget histogramWidget.widget_id) ] [ text "Delete" ]
-            ]
+            div [ class "widget-square" ]
+                [ Widgets.Histogram.view histogramWidget.data
+                , button [ class "delete-widget-button", onClick (DeleteWidget histogramWidget.widget_id) ] [ text "Delete" ]
+                ]
 
 
 viewFetchError : String -> Html Msg
@@ -318,3 +216,15 @@ deleteWidget dashboardId widgetId =
                 (Json.Encode.object [ ( "dashboard_id", Dashboard.idEncoder dashboardId ), ( "widget_id", Json.Encode.int widgetId ) ])
         , expect = Http.expectJson (DashboardReceived << RemoteData.fromResult) dashboardDecoder
         }
+
+
+
+-- updateDashboard : DashboardInfo -> Cmd Msg
+-- updateDashboard dashboardInfo =
+--     Http.post
+--         { url = "http://127.0.0.1:6969/update-dashboard"
+--         , body =
+--             Http.jsonBody
+--                 (dashboardInfoEncoder dashboardInfo)
+--         , expect = Http.expectJson (DashboardReceived << RemoteData.fromResult) dashboardDecoder
+--         }

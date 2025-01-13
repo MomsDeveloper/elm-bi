@@ -6397,7 +6397,7 @@ var $author$project$Page$DashboardPage$getDashboard = function (dashboardId) {
 		});
 };
 var $krisajenkins$remotedata$RemoteData$Loading = {$: 'Loading'};
-var $author$project$Page$DashboardPage$emptyWidget = function (widgetType) {
+var $author$project$Components$AddWidgetForm$emptyWidget = function (widgetType) {
 	switch (widgetType) {
 		case 'PieChart':
 			return $author$project$Models$Widgets$Pie(
@@ -6410,13 +6410,19 @@ var $author$project$Page$DashboardPage$emptyWidget = function (widgetType) {
 				{data: _List_Nil, data_column: '', table: '', title: '', widget_id: 0});
 	}
 };
+var $author$project$Components$AddWidgetForm$init = function (tables) {
+	return {
+		isWidgetTypeSelected: false,
+		selectedTable: A2($author$project$Models$DataSource$Table, '', _List_Nil),
+		tables: tables,
+		widget: $author$project$Components$AddWidgetForm$emptyWidget('')
+	};
+};
 var $author$project$Page$DashboardPage$initialModel = function (navKey) {
 	return {
+		addWidgetForm: $author$project$Components$AddWidgetForm$init(_List_Nil),
 		dashboard: $krisajenkins$remotedata$RemoteData$Loading,
-		isWidgetTypeSelected: false,
 		navKey: navKey,
-		newWidget: $author$project$Page$DashboardPage$emptyWidget('PieChart'),
-		selectedTable: A2($author$project$Models$DataSource$Table, '', _List_Nil),
 		showAddWidgetForm: false
 	};
 };
@@ -6455,14 +6461,15 @@ var $krisajenkins$remotedata$RemoteData$NotAsked = {$: 'NotAsked'};
 var $elm$core$Basics$negate = function (n) {
 	return -n;
 };
-var $author$project$Page$ListDashboards$emptyDashboard = {
+var $author$project$Components$AddDashboardForm$emptyDashboard = {
 	dashboard_id: $author$project$Models$Dashboard$DashboardId(-1),
 	dataSource: {database: '', host: '', password: '', portNumber: 0, tables: _List_Nil, username: ''},
 	title: '',
 	widgets: _List_Nil
 };
+var $author$project$Components$AddDashboardForm$init = {dashboard: $author$project$Components$AddDashboardForm$emptyDashboard};
 var $author$project$Page$ListDashboards$initialModel = function (navKey) {
-	return {createError: $elm$core$Maybe$Nothing, dashboards: $krisajenkins$remotedata$RemoteData$NotAsked, deleteError: $elm$core$Maybe$Nothing, navKey: navKey, newDashboard: $author$project$Page$ListDashboards$emptyDashboard, showAddDashboardForm: false};
+	return {addDashboardForm: $author$project$Components$AddDashboardForm$init, createError: $elm$core$Maybe$Nothing, dashboards: $krisajenkins$remotedata$RemoteData$NotAsked, deleteError: $elm$core$Maybe$Nothing, navKey: navKey, showAddDashboardForm: false};
 };
 var $author$project$Page$ListDashboards$init = function (navKey) {
 	return _Utils_Tuple2(
@@ -6871,28 +6878,6 @@ var $elm$url$Url$toString = function (url) {
 					_Utils_ap(http, url.host)),
 				url.path)));
 };
-var $author$project$Page$DashboardPage$deleteWidget = F2(
-	function (dashboardId, widgetId) {
-		return $elm$http$Http$post(
-			{
-				body: $elm$http$Http$jsonBody(
-					$elm$json$Json$Encode$object(
-						_List_fromArray(
-							[
-								_Utils_Tuple2(
-								'dashboard_id',
-								$author$project$Models$Dashboard$idEncoder(dashboardId)),
-								_Utils_Tuple2(
-								'widget_id',
-								$elm$json$Json$Encode$int(widgetId))
-							]))),
-				expect: A2(
-					$elm$http$Http$expectJson,
-					A2($elm$core$Basics$composeL, $author$project$Page$DashboardPage$DashboardReceived, $krisajenkins$remotedata$RemoteData$fromResult),
-					$author$project$Models$Dashboard$dashboardDecoder),
-				url: 'http://127.0.0.1:6969/delete-widget'
-			});
-	});
 var $elm$json$Json$Encode$float = _Json_wrap;
 var $author$project$Models$DataSource$histogramDataToValue = function (histogramData) {
 	return $elm$json$Json$Encode$object(
@@ -7012,19 +6997,50 @@ var $author$project$Page$DashboardPage$addWidget = F2(
 				url: 'http://127.0.0.1:6969/add-widget'
 			});
 	});
-var $author$project$Page$DashboardPage$clearWidgetForm = function (model) {
+var $author$project$Page$DashboardPage$deleteWidget = F2(
+	function (dashboardId, widgetId) {
+		return $elm$http$Http$post(
+			{
+				body: $elm$http$Http$jsonBody(
+					$elm$json$Json$Encode$object(
+						_List_fromArray(
+							[
+								_Utils_Tuple2(
+								'dashboard_id',
+								$author$project$Models$Dashboard$idEncoder(dashboardId)),
+								_Utils_Tuple2(
+								'widget_id',
+								$elm$json$Json$Encode$int(widgetId))
+							]))),
+				expect: A2(
+					$elm$http$Http$expectJson,
+					A2($elm$core$Basics$composeL, $author$project$Page$DashboardPage$DashboardReceived, $krisajenkins$remotedata$RemoteData$fromResult),
+					$author$project$Models$Dashboard$dashboardDecoder),
+				url: 'http://127.0.0.1:6969/delete-widget'
+			});
+	});
+var $author$project$Components$AddWidgetForm$clearForm = function (model) {
 	return _Utils_update(
 		model,
 		{
 			isWidgetTypeSelected: false,
-			newWidget: $author$project$Page$DashboardPage$emptyWidget(''),
-			selectedTable: A2($author$project$Models$DataSource$Table, '', _List_Nil)
+			selectedTable: A2($author$project$Models$DataSource$Table, '', _List_Nil),
+			widget: $author$project$Components$AddWidgetForm$emptyWidget('')
 		});
 };
-var $author$project$Page$DashboardPage$toggleColumn = F2(
+var $elm$core$List$head = function (list) {
+	if (list.b) {
+		var x = list.a;
+		var xs = list.b;
+		return $elm$core$Maybe$Just(x);
+	} else {
+		return $elm$core$Maybe$Nothing;
+	}
+};
+var $author$project$Components$AddWidgetForm$toggleColumn = F2(
 	function (columnName, model) {
 		var updatedWidget = function () {
-			var _v0 = model.newWidget;
+			var _v0 = model.widget;
 			if (_v0.$ === 'Pie') {
 				var data = _v0.a;
 				return $author$project$Models$Widgets$Pie(
@@ -7039,11 +7055,9 @@ var $author$project$Page$DashboardPage$toggleColumn = F2(
 						{data_column: columnName}));
 			}
 		}();
-		return _Utils_Tuple2(
-			_Utils_update(
-				model,
-				{newWidget: updatedWidget}),
-			$elm$core$Platform$Cmd$none);
+		return _Utils_update(
+			model,
+			{widget: updatedWidget});
 	});
 var $elm_community$list_extra$List$Extra$find = F2(
 	function (predicate, list) {
@@ -7066,88 +7080,74 @@ var $elm_community$list_extra$List$Extra$find = F2(
 			}
 		}
 	});
-var $author$project$Page$DashboardPage$updateTableSelection = F2(
+var $author$project$Components$AddWidgetForm$updateTableSelection = F2(
 	function (tableName, model) {
 		var updatedWidget = function () {
-			var _v2 = model.newWidget;
-			if (_v2.$ === 'Pie') {
-				var data = _v2.a;
+			var _v1 = model.widget;
+			if (_v1.$ === 'Pie') {
+				var data = _v1.a;
 				return $author$project$Models$Widgets$Pie(
 					_Utils_update(
 						data,
 						{table: tableName}));
 			} else {
-				var data = _v2.a;
+				var data = _v1.a;
 				return $author$project$Models$Widgets$Histogram(
 					_Utils_update(
 						data,
 						{table: tableName}));
 			}
 		}();
-		var selectedTable = function () {
-			var _v1 = model.dashboard;
-			if (_v1.$ === 'Success') {
-				var dashboardData = _v1.a;
-				return A2(
-					$elm_community$list_extra$List$Extra$find,
-					function (table) {
-						return _Utils_eq(table.name, tableName);
-					},
-					dashboardData.dataSource.tables);
-			} else {
-				return $elm$core$Maybe$Nothing;
-			}
-		}();
+		var selectedTable = A2(
+			$elm_community$list_extra$List$Extra$find,
+			function (table) {
+				return _Utils_eq(table.name, tableName);
+			},
+			model.tables);
 		if (selectedTable.$ === 'Just') {
 			var table = selectedTable.a;
-			return _Utils_Tuple2(
-				_Utils_update(
-					model,
-					{newWidget: updatedWidget, selectedTable: table}),
-				$elm$core$Platform$Cmd$none);
+			return _Utils_update(
+				model,
+				{selectedTable: table, widget: updatedWidget});
 		} else {
-			return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+			return model;
 		}
 	});
-var $author$project$Page$DashboardPage$updateForm = F2(
-	function (formMsg, model) {
-		switch (formMsg.$) {
+var $elm$core$Maybe$withDefault = F2(
+	function (_default, maybe) {
+		if (maybe.$ === 'Just') {
+			var value = maybe.a;
+			return value;
+		} else {
+			return _default;
+		}
+	});
+var $author$project$Components$AddWidgetForm$update = F2(
+	function (msg, model) {
+		switch (msg.$) {
 			case 'Cancel':
-				var clearedModel = $author$project$Page$DashboardPage$clearWidgetForm(model);
-				return _Utils_Tuple2(
-					_Utils_update(
-						clearedModel,
-						{showAddWidgetForm: false}),
-					$elm$core$Platform$Cmd$none);
+				return $author$project$Components$AddWidgetForm$clearForm(model);
 			case 'TableSelected':
-				var tableName = formMsg.a;
-				return A2($author$project$Page$DashboardPage$updateTableSelection, tableName, model);
+				var tableName = msg.a;
+				return A2($author$project$Components$AddWidgetForm$updateTableSelection, tableName, model);
 			case 'ColumnToggled':
-				var columnName = formMsg.a;
-				return A2($author$project$Page$DashboardPage$toggleColumn, columnName, model);
+				var columnName = msg.a;
+				return A2($author$project$Components$AddWidgetForm$toggleColumn, columnName, model);
 			case 'WidgetTypeSelected':
-				var widgetType = formMsg.a;
-				return _Utils_Tuple2(
-					_Utils_update(
-						model,
-						{
-							isWidgetTypeSelected: true,
-							newWidget: $author$project$Page$DashboardPage$emptyWidget(widgetType)
-						}),
-					$elm$core$Platform$Cmd$none);
+				var widgetType = msg.a;
+				var selectedTable = A2(
+					$elm$core$Maybe$withDefault,
+					A2($author$project$Models$DataSource$Table, '', _List_Nil),
+					$elm$core$List$head(model.tables));
+				return _Utils_update(
+					model,
+					{
+						isWidgetTypeSelected: true,
+						selectedTable: selectedTable,
+						widget: $author$project$Components$AddWidgetForm$emptyWidget(widgetType)
+					});
 			default:
-				var _v1 = model.dashboard;
-				if (_v1.$ === 'Success') {
-					var dashboardData = _v1.a;
-					var clearedModel = $author$project$Page$DashboardPage$clearWidgetForm(model);
-					return _Utils_Tuple2(
-						_Utils_update(
-							clearedModel,
-							{showAddWidgetForm: false}),
-						A2($author$project$Page$DashboardPage$addWidget, model.newWidget, dashboardData.dashboard_id));
-				} else {
-					return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
-				}
+				return model;
 		}
 	});
 var $author$project$Page$DashboardPage$update = F2(
@@ -7156,25 +7156,69 @@ var $author$project$Page$DashboardPage$update = F2(
 			case 'DashboardReceived':
 				var response = msg.a;
 				var clearedModel = $author$project$Page$DashboardPage$initialModel(model.navKey);
-				return _Utils_Tuple2(
-					_Utils_update(
-						clearedModel,
-						{dashboard: response}),
-					$elm$core$Platform$Cmd$none);
+				var updatedModel = function () {
+					if (response.$ === 'Success') {
+						var dashboardData = response.a;
+						return _Utils_update(
+							clearedModel,
+							{
+								addWidgetForm: $author$project$Components$AddWidgetForm$init(dashboardData.dataSource.tables),
+								dashboard: response
+							});
+					} else {
+						return _Utils_update(
+							clearedModel,
+							{dashboard: response});
+					}
+				}();
+				return _Utils_Tuple2(updatedModel, $elm$core$Platform$Cmd$none);
 			case 'ShowForm':
 				return _Utils_Tuple2(
 					_Utils_update(
 						model,
 						{showAddWidgetForm: true}),
 					$elm$core$Platform$Cmd$none);
-			case 'FormChanged':
+			case 'WidgetFormChanged':
 				var formMsg = msg.a;
-				return A2($author$project$Page$DashboardPage$updateForm, formMsg, model);
+				switch (formMsg.$) {
+					case 'Cancel':
+						var updatedForm = A2($author$project$Components$AddWidgetForm$update, formMsg, model.addWidgetForm);
+						return _Utils_Tuple2(
+							_Utils_update(
+								model,
+								{addWidgetForm: updatedForm, showAddWidgetForm: false}),
+							$elm$core$Platform$Cmd$none);
+					case 'AddNewWidget':
+						var _v3 = model.dashboard;
+						if (_v3.$ === 'Success') {
+							var dashboardData = _v3.a;
+							var widget = model.addWidgetForm.widget;
+							var dashboardId = dashboardData.dashboard_id;
+							return _Utils_Tuple2(
+								_Utils_update(
+									model,
+									{showAddWidgetForm: false}),
+								A2($author$project$Page$DashboardPage$addWidget, widget, dashboardId));
+						} else {
+							return _Utils_Tuple2(
+								_Utils_update(
+									model,
+									{showAddWidgetForm: false}),
+								$elm$core$Platform$Cmd$none);
+						}
+					default:
+						var updatedForm = A2($author$project$Components$AddWidgetForm$update, formMsg, model.addWidgetForm);
+						return _Utils_Tuple2(
+							_Utils_update(
+								model,
+								{addWidgetForm: updatedForm}),
+							$elm$core$Platform$Cmd$none);
+				}
 			default:
 				var widgetId = msg.a;
-				var _v1 = model.dashboard;
-				if (_v1.$ === 'Success') {
-					var dashboardData = _v1.a;
+				var _v4 = model.dashboard;
+				if (_v4.$ === 'Success') {
+					var dashboardData = _v4.a;
 					return _Utils_Tuple2(
 						model,
 						A2($author$project$Page$DashboardPage$deleteWidget, dashboardData.dashboard_id, widgetId));
@@ -7200,49 +7244,6 @@ var $author$project$Error$buildErrorMessage = function (httpError) {
 			return message;
 	}
 };
-var $author$project$Page$ListDashboards$DashboardDeleted = function (a) {
-	return {$: 'DashboardDeleted', a: a};
-};
-var $author$project$Page$ListDashboards$deleteDashboard = function (dashboardId) {
-	return $elm$http$Http$post(
-		{
-			body: $elm$http$Http$jsonBody(
-				$elm$json$Json$Encode$object(
-					_List_fromArray(
-						[
-							_Utils_Tuple2(
-							'dashboard_id',
-							$author$project$Models$Dashboard$idEncoder(dashboardId))
-						]))),
-			expect: A2(
-				$elm$http$Http$expectJson,
-				A2($elm$core$Basics$composeR, $krisajenkins$remotedata$RemoteData$fromResult, $author$project$Page$ListDashboards$DashboardDeleted),
-				$author$project$Page$ListDashboards$dashBoardsInfoDecoder),
-			url: 'http://127.0.0.1:6969/delete-dashboard'
-		});
-};
-var $author$project$Models$Dashboard$idToString = function (_v0) {
-	var id = _v0.a;
-	return $elm$core$String$fromInt(id);
-};
-var $author$project$Route$routeToString = function (route) {
-	switch (route.$) {
-		case 'NotFound':
-			return '/not-found';
-		case 'Dashboards':
-			return '/dashboards';
-		default:
-			var dashboardId = route.a;
-			return '/dashboards/' + $author$project$Models$Dashboard$idToString(dashboardId);
-	}
-};
-var $author$project$Route$pushUrl = F2(
-	function (route, navKey) {
-		return A2(
-			$elm$browser$Browser$Navigation$pushUrl,
-			navKey,
-			$author$project$Route$routeToString(route));
-	});
 var $author$project$Page$ListDashboards$DashboardCreated = function (a) {
 	return {$: 'DashboardCreated', a: a};
 };
@@ -7321,105 +7322,130 @@ var $author$project$Page$ListDashboards$create_dashboard = function (dashboard) 
 			url: 'http://127.0.0.1:6969/create-dashboard'
 		});
 };
-var $author$project$Page$ListDashboards$updateForm = F2(
+var $author$project$Page$ListDashboards$DashboardDeleted = function (a) {
+	return {$: 'DashboardDeleted', a: a};
+};
+var $author$project$Page$ListDashboards$deleteDashboard = function (dashboardId) {
+	return $elm$http$Http$post(
+		{
+			body: $elm$http$Http$jsonBody(
+				$elm$json$Json$Encode$object(
+					_List_fromArray(
+						[
+							_Utils_Tuple2(
+							'dashboard_id',
+							$author$project$Models$Dashboard$idEncoder(dashboardId))
+						]))),
+			expect: A2(
+				$elm$http$Http$expectJson,
+				A2($elm$core$Basics$composeR, $krisajenkins$remotedata$RemoteData$fromResult, $author$project$Page$ListDashboards$DashboardDeleted),
+				$author$project$Page$ListDashboards$dashBoardsInfoDecoder),
+			url: 'http://127.0.0.1:6969/delete-dashboard'
+		});
+};
+var $author$project$Models$Dashboard$idToString = function (_v0) {
+	var id = _v0.a;
+	return $elm$core$String$fromInt(id);
+};
+var $author$project$Route$routeToString = function (route) {
+	switch (route.$) {
+		case 'NotFound':
+			return '/not-found';
+		case 'Dashboards':
+			return '/dashboards';
+		default:
+			var dashboardId = route.a;
+			return '/dashboards/' + $author$project$Models$Dashboard$idToString(dashboardId);
+	}
+};
+var $author$project$Route$pushUrl = F2(
+	function (route, navKey) {
+		return A2(
+			$elm$browser$Browser$Navigation$pushUrl,
+			navKey,
+			$author$project$Route$routeToString(route));
+	});
+var $author$project$Components$AddDashboardForm$update = F2(
 	function (msg, model) {
 		switch (msg.$) {
 			case 'UpdatePassword':
 				var password = msg.a;
-				var oldDashboard = model.newDashboard;
-				var dataSource = model.newDashboard.dataSource;
+				var oldDashboard = model.dashboard;
+				var dataSource = model.dashboard.dataSource;
 				var updatedDataSource = _Utils_update(
 					dataSource,
 					{password: password});
 				var updatedDashboard = _Utils_update(
 					oldDashboard,
 					{dataSource: updatedDataSource});
-				return _Utils_Tuple2(
-					_Utils_update(
-						model,
-						{newDashboard: updatedDashboard}),
-					$elm$core$Platform$Cmd$none);
+				return _Utils_update(
+					model,
+					{dashboard: updatedDashboard});
 			case 'UpdateUsername':
 				var username = msg.a;
-				var oldDashboard = model.newDashboard;
-				var dataSource = model.newDashboard.dataSource;
+				var oldDashboard = model.dashboard;
+				var dataSource = model.dashboard.dataSource;
 				var updatedDataSource = _Utils_update(
 					dataSource,
 					{username: username});
 				var updatedDashboard = _Utils_update(
 					oldDashboard,
 					{dataSource: updatedDataSource});
-				return _Utils_Tuple2(
-					_Utils_update(
-						model,
-						{newDashboard: updatedDashboard}),
-					$elm$core$Platform$Cmd$none);
+				return _Utils_update(
+					model,
+					{dashboard: updatedDashboard});
 			case 'UpdateHost':
 				var host = msg.a;
-				var oldDashboard = model.newDashboard;
-				var dataSource = model.newDashboard.dataSource;
+				var oldDashboard = model.dashboard;
+				var dataSource = model.dashboard.dataSource;
 				var updatedDataSource = _Utils_update(
 					dataSource,
 					{host: host});
 				var updatedDashboard = _Utils_update(
 					oldDashboard,
 					{dataSource: updatedDataSource});
-				return _Utils_Tuple2(
-					_Utils_update(
-						model,
-						{newDashboard: updatedDashboard}),
-					$elm$core$Platform$Cmd$none);
+				return _Utils_update(
+					model,
+					{dashboard: updatedDashboard});
 			case 'UpdatePortNumber':
 				var portNumber = msg.a;
-				var oldDashboard = model.newDashboard;
-				var dataSource = model.newDashboard.dataSource;
+				var oldDashboard = model.dashboard;
+				var dataSource = model.dashboard.dataSource;
 				var updatedDataSource = _Utils_update(
 					dataSource,
 					{portNumber: portNumber});
 				var updatedDashboard = _Utils_update(
 					oldDashboard,
 					{dataSource: updatedDataSource});
-				return _Utils_Tuple2(
-					_Utils_update(
-						model,
-						{newDashboard: updatedDashboard}),
-					$elm$core$Platform$Cmd$none);
+				return _Utils_update(
+					model,
+					{dashboard: updatedDashboard});
 			case 'UpdateDatabase':
 				var database = msg.a;
-				var oldDashboard = model.newDashboard;
-				var dataSource = model.newDashboard.dataSource;
+				var oldDashboard = model.dashboard;
+				var dataSource = model.dashboard.dataSource;
 				var updatedDataSource = _Utils_update(
 					dataSource,
 					{database: database});
 				var updatedDashboard = _Utils_update(
 					oldDashboard,
 					{dataSource: updatedDataSource});
-				return _Utils_Tuple2(
-					_Utils_update(
-						model,
-						{newDashboard: updatedDashboard}),
-					$elm$core$Platform$Cmd$none);
+				return _Utils_update(
+					model,
+					{dashboard: updatedDashboard});
 			case 'UpdateTitle':
 				var title = msg.a;
-				var oldDashboard = model.newDashboard;
+				var oldDashboard = model.dashboard;
 				var updatedDashboard = _Utils_update(
 					oldDashboard,
 					{title: title});
-				return _Utils_Tuple2(
-					_Utils_update(
-						model,
-						{newDashboard: updatedDashboard}),
-					$elm$core$Platform$Cmd$none);
-			case 'Cancel':
-				return _Utils_Tuple2(
-					_Utils_update(
-						model,
-						{showAddDashboardForm: false}),
-					$elm$core$Platform$Cmd$none);
-			default:
-				return _Utils_Tuple2(
+				return _Utils_update(
 					model,
-					$author$project$Page$ListDashboards$create_dashboard(model.newDashboard));
+					{dashboard: updatedDashboard});
+			case 'Cancel':
+				return $author$project$Components$AddDashboardForm$init;
+			default:
+				return model;
 		}
 	});
 var $author$project$Page$ListDashboards$update = F2(
@@ -7458,7 +7484,27 @@ var $author$project$Page$ListDashboards$update = F2(
 					$elm$core$Platform$Cmd$none);
 			case 'FormChanged':
 				var formMsg = msg.a;
-				return A2($author$project$Page$ListDashboards$updateForm, formMsg, model);
+				switch (formMsg.$) {
+					case 'Cancel':
+						return _Utils_Tuple2(
+							_Utils_update(
+								model,
+								{showAddDashboardForm: false}),
+							$elm$core$Platform$Cmd$none);
+					case 'AddNewDashboard':
+						return _Utils_Tuple2(
+							_Utils_update(
+								model,
+								{showAddDashboardForm: false}),
+							$author$project$Page$ListDashboards$create_dashboard(model.addDashboardForm.dashboard));
+					default:
+						var updatedForm = A2($author$project$Components$AddDashboardForm$update, formMsg, model.addDashboardForm);
+						return _Utils_Tuple2(
+							_Utils_update(
+								model,
+								{addDashboardForm: updatedForm}),
+							$elm$core$Platform$Cmd$none);
+				}
 			case 'DashboardCreated':
 				if (msg.a.$ === 'Ok') {
 					var dashboard = msg.a.a;
@@ -7570,6 +7616,9 @@ var $author$project$Main$notFoundView = A2(
 		[
 			$elm$html$Html$text('Oops! The page you requested was not found!')
 		]));
+var $author$project$Page$DashboardPage$WidgetFormChanged = function (a) {
+	return {$: 'WidgetFormChanged', a: a};
+};
 var $elm$html$Html$div = _VirtualDom_node('div');
 var $elm$html$Html$Attributes$stringProperty = F2(
 	function (key, string) {
@@ -7590,7 +7639,15 @@ var $elm$virtual_dom$VirtualDom$node = function (tag) {
 };
 var $elm$html$Html$node = $elm$virtual_dom$VirtualDom$node;
 var $elm$html$Html$Attributes$rel = _VirtualDom_attribute('rel');
-var $author$project$Page$DashboardPage$ShowForm = {$: 'ShowForm'};
+var $author$project$Components$AddWidgetForm$AddNewWidget = {$: 'AddNewWidget'};
+var $author$project$Components$AddWidgetForm$Cancel = {$: 'Cancel'};
+var $author$project$Components$AddWidgetForm$TableSelected = function (a) {
+	return {$: 'TableSelected', a: a};
+};
+var $author$project$Components$AddWidgetForm$WidgetTypeSelected = function (a) {
+	return {$: 'WidgetTypeSelected', a: a};
+};
+var $elm$html$Html$button = _VirtualDom_node('button');
 var $elm$html$Html$Attributes$class = $elm$html$Html$Attributes$stringProperty('className');
 var $elm$virtual_dom$VirtualDom$Normal = function (a) {
 	return {$: 'Normal', a: a};
@@ -7609,29 +7666,6 @@ var $elm$html$Html$Events$onClick = function (msg) {
 		'click',
 		$elm$json$Json$Decode$succeed(msg));
 };
-var $author$project$Page$DashboardPage$viewAddWidgetButton = A2(
-	$elm$html$Html$div,
-	_List_fromArray(
-		[
-			$elm$html$Html$Attributes$class('widget-square'),
-			$elm$html$Html$Events$onClick($author$project$Page$DashboardPage$ShowForm)
-		]),
-	_List_fromArray(
-		[
-			$elm$html$Html$text('+')
-		]));
-var $author$project$Page$DashboardPage$AddNewWidget = {$: 'AddNewWidget'};
-var $author$project$Page$DashboardPage$Cancel = {$: 'Cancel'};
-var $author$project$Page$DashboardPage$FormChanged = function (a) {
-	return {$: 'FormChanged', a: a};
-};
-var $author$project$Page$DashboardPage$TableSelected = function (a) {
-	return {$: 'TableSelected', a: a};
-};
-var $author$project$Page$DashboardPage$WidgetTypeSelected = function (a) {
-	return {$: 'WidgetTypeSelected', a: a};
-};
-var $elm$html$Html$button = _VirtualDom_node('button');
 var $elm$html$Html$Events$alwaysStop = function (x) {
 	return _Utils_Tuple2(x, true);
 };
@@ -7666,10 +7700,10 @@ var $elm$html$Html$Events$onInput = function (tagger) {
 var $elm$html$Html$option = _VirtualDom_node('option');
 var $elm$html$Html$select = _VirtualDom_node('select');
 var $elm$html$Html$Attributes$value = $elm$html$Html$Attributes$stringProperty('value');
-var $author$project$Page$DashboardPage$ColumnToggled = function (a) {
+var $author$project$Components$AddWidgetForm$ColumnToggled = function (a) {
 	return {$: 'ColumnToggled', a: a};
 };
-var $author$project$Page$DashboardPage$viewTableColumns = function (table) {
+var $author$project$Components$AddWidgetForm$viewTableColumns = function (table) {
 	return A2(
 		$elm$html$Html$div,
 		_List_Nil,
@@ -7680,8 +7714,7 @@ var $author$project$Page$DashboardPage$viewTableColumns = function (table) {
 				_List_fromArray(
 					[
 						$elm$html$Html$Attributes$class('table-dropdown'),
-						$elm$html$Html$Events$onInput(
-						A2($elm$core$Basics$composeL, $author$project$Page$DashboardPage$FormChanged, $author$project$Page$DashboardPage$ColumnToggled))
+						$elm$html$Html$Events$onInput($author$project$Components$AddWidgetForm$ColumnToggled)
 					]),
 				A2(
 					$elm$core$List$map,
@@ -7700,128 +7733,145 @@ var $author$project$Page$DashboardPage$viewTableColumns = function (table) {
 					table.columns))
 			]));
 };
-var $author$project$Page$DashboardPage$viewAddWidgetForm = function (model) {
-	var _v0 = model.dashboard;
-	if (_v0.$ === 'Success') {
-		var dashboardData = _v0.a;
-		return A2(
-			$elm$html$Html$div,
-			_List_fromArray(
-				[
-					$elm$html$Html$Attributes$class('add-widget form')
-				]),
-			_List_fromArray(
-				[
-					A2(
-					$elm$html$Html$h3,
-					_List_Nil,
-					_List_fromArray(
-						[
-							$elm$html$Html$text('Add Widget')
-						])),
-					A2(
-					$elm$html$Html$div,
-					_List_Nil,
-					_List_fromArray(
-						[
-							A2(
-							$elm$html$Html$select,
-							_List_fromArray(
-								[
-									$elm$html$Html$Attributes$class('table-dropdown'),
-									$elm$html$Html$Events$onInput(
-									A2($elm$core$Basics$composeL, $author$project$Page$DashboardPage$FormChanged, $author$project$Page$DashboardPage$WidgetTypeSelected))
-								]),
-							_List_fromArray(
-								[
-									A2(
-									$elm$html$Html$option,
-									_List_fromArray(
-										[
-											$elm$html$Html$Attributes$value('PieChart')
-										]),
-									_List_fromArray(
-										[
-											$elm$html$Html$text('Pie Chart')
-										])),
-									A2(
-									$elm$html$Html$option,
-									_List_fromArray(
-										[
-											$elm$html$Html$Attributes$value('Histogram')
-										]),
-									_List_fromArray(
-										[
-											$elm$html$Html$text('Histogram')
-										]))
-								]))
-						])),
-					model.isWidgetTypeSelected ? A2(
-					$elm$html$Html$div,
-					_List_Nil,
-					_List_fromArray(
-						[
-							A2(
-							$elm$html$Html$select,
-							_List_fromArray(
-								[
-									$elm$html$Html$Attributes$class('table-dropdown'),
-									$elm$html$Html$Events$onInput(
-									A2($elm$core$Basics$composeL, $author$project$Page$DashboardPage$FormChanged, $author$project$Page$DashboardPage$TableSelected))
-								]),
-							A2(
-								$elm$core$List$map,
-								function (table) {
-									return A2(
+var $author$project$Components$AddWidgetForm$view = function (model) {
+	return A2(
+		$elm$html$Html$div,
+		_List_fromArray(
+			[
+				$elm$html$Html$Attributes$class('add-widget form')
+			]),
+		_List_fromArray(
+			[
+				A2(
+				$elm$html$Html$h3,
+				_List_Nil,
+				_List_fromArray(
+					[
+						$elm$html$Html$text('Add Widget')
+					])),
+				A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$class('form-content')
+					]),
+				_List_fromArray(
+					[
+						A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('form-group')
+							]),
+						_List_fromArray(
+							[
+								A2(
+								$elm$html$Html$select,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$class('table-dropdown'),
+										$elm$html$Html$Events$onInput($author$project$Components$AddWidgetForm$WidgetTypeSelected)
+									]),
+								_List_fromArray(
+									[
+										A2(
 										$elm$html$Html$option,
 										_List_fromArray(
 											[
-												$elm$html$Html$Attributes$value(table.name)
+												$elm$html$Html$Attributes$value('PieChart')
 											]),
 										_List_fromArray(
 											[
-												$elm$html$Html$text(table.name)
-											]));
-								},
-								dashboardData.dataSource.tables)),
-							A2(
-							$elm$html$Html$div,
-							_List_Nil,
-							_List_fromArray(
-								[
-									$elm$html$Html$text('Select columns:')
-								])),
-							$author$project$Page$DashboardPage$viewTableColumns(model.selectedTable)
-						])) : $elm$html$Html$text(''),
-					A2(
-					$elm$html$Html$button,
-					_List_fromArray(
-						[
-							$elm$html$Html$Attributes$class('add-widget-button'),
-							$elm$html$Html$Events$onClick(
-							$author$project$Page$DashboardPage$FormChanged($author$project$Page$DashboardPage$AddNewWidget))
-						]),
-					_List_fromArray(
-						[
-							$elm$html$Html$text('Add Widget')
-						])),
-					A2(
-					$elm$html$Html$button,
-					_List_fromArray(
-						[
-							$elm$html$Html$Attributes$class('cancel-button'),
-							$elm$html$Html$Events$onClick(
-							$author$project$Page$DashboardPage$FormChanged($author$project$Page$DashboardPage$Cancel))
-						]),
-					_List_fromArray(
-						[
-							$elm$html$Html$text('Cancel')
-						]))
-				]));
-	} else {
-		return $elm$html$Html$text('');
-	}
+												$elm$html$Html$text('Pie Chart')
+											])),
+										A2(
+										$elm$html$Html$option,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$value('Histogram')
+											]),
+										_List_fromArray(
+											[
+												$elm$html$Html$text('Histogram')
+											]))
+									]))
+							])),
+						model.isWidgetTypeSelected ? A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('form-group')
+							]),
+						_List_fromArray(
+							[
+								A2(
+								$elm$html$Html$select,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$class('table-dropdown'),
+										$elm$html$Html$Events$onInput($author$project$Components$AddWidgetForm$TableSelected)
+									]),
+								A2(
+									$elm$core$List$map,
+									function (table) {
+										return A2(
+											$elm$html$Html$option,
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$value(table.name)
+												]),
+											_List_fromArray(
+												[
+													$elm$html$Html$text(table.name)
+												]));
+									},
+									model.tables)),
+								A2(
+								$elm$html$Html$div,
+								_List_Nil,
+								_List_fromArray(
+									[
+										$elm$html$Html$text('Select columns:')
+									])),
+								$author$project$Components$AddWidgetForm$viewTableColumns(model.selectedTable)
+							])) : $elm$html$Html$text(''),
+						A2(
+						$elm$html$Html$button,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('add-widget-button'),
+								$elm$html$Html$Events$onClick($author$project$Components$AddWidgetForm$AddNewWidget)
+							]),
+						_List_fromArray(
+							[
+								$elm$html$Html$text('Add Widget')
+							])),
+						A2(
+						$elm$html$Html$button,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('cancel-button'),
+								$elm$html$Html$Events$onClick($author$project$Components$AddWidgetForm$Cancel)
+							]),
+						_List_fromArray(
+							[
+								$elm$html$Html$text('Cancel')
+							]))
+					]))
+			]));
 };
+var $author$project$Page$DashboardPage$ShowForm = {$: 'ShowForm'};
+var $author$project$Page$DashboardPage$viewAddWidgetButton = A2(
+	$elm$html$Html$div,
+	_List_fromArray(
+		[
+			$elm$html$Html$Attributes$class('widget-square'),
+			$elm$html$Html$Events$onClick($author$project$Page$DashboardPage$ShowForm)
+		]),
+	_List_fromArray(
+		[
+			$elm$html$Html$text('+')
+		]));
 var $author$project$Page$DashboardPage$viewFetchError = function (errorMessage) {
 	var errorHeading = 'Couldn\'t fetch dashboard at this time.';
 	return A2(
@@ -8470,15 +8520,6 @@ var $elm$core$Array$length = function (_v0) {
 var $elm$core$Basics$min = F2(
 	function (x, y) {
 		return (_Utils_cmp(x, y) < 0) ? x : y;
-	});
-var $elm$core$Maybe$withDefault = F2(
-	function (_default, maybe) {
-		if (maybe.$ === 'Just') {
-			var value = maybe.a;
-			return value;
-		} else {
-			return _default;
-		}
 	});
 var $gampleman$elm_visualization$Histogram$Array$bisectRight = F3(
 	function (item, array, extent) {
@@ -11357,7 +11398,10 @@ var $author$project$Page$DashboardPage$view = function (model) {
 						$elm$html$Html$text('Widgets')
 					])),
 				$author$project$Page$DashboardPage$viewAddWidgetButton,
-				model.showAddWidgetForm ? $author$project$Page$DashboardPage$viewAddWidgetForm(model) : $elm$html$Html$text(''),
+				model.showAddWidgetForm ? A2(
+				$elm$html$Html$map,
+				$author$project$Page$DashboardPage$WidgetFormChanged,
+				$author$project$Components$AddWidgetForm$view(model.addWidgetForm)) : $elm$html$Html$text(''),
 				$author$project$Page$DashboardPage$viewDashboard(model.dashboard),
 				A3(
 				$elm$html$Html$node,
@@ -11370,46 +11414,33 @@ var $author$project$Page$DashboardPage$view = function (model) {
 				_List_Nil)
 			]));
 };
-var $author$project$Page$ListDashboards$FetchDashboards = {$: 'FetchDashboards'};
-var $author$project$Page$ListDashboards$ShowForm = {$: 'ShowForm'};
-var $author$project$Page$ListDashboards$viewAddDashboardButton = A2(
-	$elm$html$Html$div,
-	_List_fromArray(
-		[
-			$elm$html$Html$Attributes$class('dashboard-square'),
-			$elm$html$Html$Events$onClick($author$project$Page$ListDashboards$ShowForm)
-		]),
-	_List_fromArray(
-		[
-			$elm$html$Html$text('+')
-		]));
-var $author$project$Page$ListDashboards$AddNewDashboard = {$: 'AddNewDashboard'};
-var $author$project$Page$ListDashboards$Cancel = {$: 'Cancel'};
 var $author$project$Page$ListDashboards$FormChanged = function (a) {
 	return {$: 'FormChanged', a: a};
 };
-var $author$project$Page$ListDashboards$UpdateDatabase = function (a) {
+var $author$project$Components$AddDashboardForm$AddNewDashboard = {$: 'AddNewDashboard'};
+var $author$project$Components$AddDashboardForm$Cancel = {$: 'Cancel'};
+var $author$project$Components$AddDashboardForm$UpdateDatabase = function (a) {
 	return {$: 'UpdateDatabase', a: a};
 };
-var $author$project$Page$ListDashboards$UpdateHost = function (a) {
+var $author$project$Components$AddDashboardForm$UpdateHost = function (a) {
 	return {$: 'UpdateHost', a: a};
 };
-var $author$project$Page$ListDashboards$UpdatePassword = function (a) {
+var $author$project$Components$AddDashboardForm$UpdatePassword = function (a) {
 	return {$: 'UpdatePassword', a: a};
 };
-var $author$project$Page$ListDashboards$UpdatePortNumber = function (a) {
+var $author$project$Components$AddDashboardForm$UpdatePortNumber = function (a) {
 	return {$: 'UpdatePortNumber', a: a};
 };
-var $author$project$Page$ListDashboards$UpdateTitle = function (a) {
+var $author$project$Components$AddDashboardForm$UpdateTitle = function (a) {
 	return {$: 'UpdateTitle', a: a};
 };
-var $author$project$Page$ListDashboards$UpdateUsername = function (a) {
+var $author$project$Components$AddDashboardForm$UpdateUsername = function (a) {
 	return {$: 'UpdateUsername', a: a};
 };
 var $elm$html$Html$input = _VirtualDom_node('input');
 var $elm$html$Html$label = _VirtualDom_node('label');
 var $elm$html$Html$Attributes$type_ = $elm$html$Html$Attributes$stringProperty('type');
-var $author$project$Page$ListDashboards$viewAddDashboardForm = A2(
+var $author$project$Components$AddDashboardForm$view = A2(
 	$elm$html$Html$div,
 	_List_fromArray(
 		[
@@ -11445,8 +11476,7 @@ var $author$project$Page$ListDashboards$viewAddDashboardForm = A2(
 							_List_fromArray(
 								[
 									$elm$html$Html$Attributes$type_('password'),
-									$elm$html$Html$Events$onInput(
-									A2($elm$core$Basics$composeL, $author$project$Page$ListDashboards$FormChanged, $author$project$Page$ListDashboards$UpdatePassword))
+									$elm$html$Html$Events$onInput($author$project$Components$AddDashboardForm$UpdatePassword)
 								]),
 							_List_Nil)
 						])),
@@ -11470,8 +11500,7 @@ var $author$project$Page$ListDashboards$viewAddDashboardForm = A2(
 							_List_fromArray(
 								[
 									$elm$html$Html$Attributes$type_('text'),
-									$elm$html$Html$Events$onInput(
-									A2($elm$core$Basics$composeL, $author$project$Page$ListDashboards$FormChanged, $author$project$Page$ListDashboards$UpdateUsername))
+									$elm$html$Html$Events$onInput($author$project$Components$AddDashboardForm$UpdateUsername)
 								]),
 							_List_Nil)
 						])),
@@ -11495,8 +11524,7 @@ var $author$project$Page$ListDashboards$viewAddDashboardForm = A2(
 							_List_fromArray(
 								[
 									$elm$html$Html$Attributes$type_('text'),
-									$elm$html$Html$Events$onInput(
-									A2($elm$core$Basics$composeL, $author$project$Page$ListDashboards$FormChanged, $author$project$Page$ListDashboards$UpdateHost))
+									$elm$html$Html$Events$onInput($author$project$Components$AddDashboardForm$UpdateHost)
 								]),
 							_List_Nil)
 						])),
@@ -11525,7 +11553,7 @@ var $author$project$Page$ListDashboards$viewAddDashboardForm = A2(
 										$elm$core$Basics$composeL,
 										A2(
 											$elm$core$Basics$composeL,
-											A2($elm$core$Basics$composeL, $author$project$Page$ListDashboards$FormChanged, $author$project$Page$ListDashboards$UpdatePortNumber),
+											$author$project$Components$AddDashboardForm$UpdatePortNumber,
 											$elm$core$Maybe$withDefault(0)),
 										$elm$core$String$toInt))
 								]),
@@ -11551,8 +11579,7 @@ var $author$project$Page$ListDashboards$viewAddDashboardForm = A2(
 							_List_fromArray(
 								[
 									$elm$html$Html$Attributes$type_('text'),
-									$elm$html$Html$Events$onInput(
-									A2($elm$core$Basics$composeL, $author$project$Page$ListDashboards$FormChanged, $author$project$Page$ListDashboards$UpdateDatabase))
+									$elm$html$Html$Events$onInput($author$project$Components$AddDashboardForm$UpdateDatabase)
 								]),
 							_List_Nil)
 						])),
@@ -11576,8 +11603,7 @@ var $author$project$Page$ListDashboards$viewAddDashboardForm = A2(
 							_List_fromArray(
 								[
 									$elm$html$Html$Attributes$type_('text'),
-									$elm$html$Html$Events$onInput(
-									A2($elm$core$Basics$composeL, $author$project$Page$ListDashboards$FormChanged, $author$project$Page$ListDashboards$UpdateTitle))
+									$elm$html$Html$Events$onInput($author$project$Components$AddDashboardForm$UpdateTitle)
 								]),
 							_List_Nil)
 						])),
@@ -11593,8 +11619,7 @@ var $author$project$Page$ListDashboards$viewAddDashboardForm = A2(
 							$elm$html$Html$button,
 							_List_fromArray(
 								[
-									$elm$html$Html$Events$onClick(
-									$author$project$Page$ListDashboards$FormChanged($author$project$Page$ListDashboards$Cancel))
+									$elm$html$Html$Events$onClick($author$project$Components$AddDashboardForm$Cancel)
 								]),
 							_List_fromArray(
 								[
@@ -11604,8 +11629,7 @@ var $author$project$Page$ListDashboards$viewAddDashboardForm = A2(
 							$elm$html$Html$button,
 							_List_fromArray(
 								[
-									$elm$html$Html$Events$onClick(
-									$author$project$Page$ListDashboards$FormChanged($author$project$Page$ListDashboards$AddNewDashboard))
+									$elm$html$Html$Events$onClick($author$project$Components$AddDashboardForm$AddNewDashboard)
 								]),
 							_List_fromArray(
 								[
@@ -11613,6 +11637,18 @@ var $author$project$Page$ListDashboards$viewAddDashboardForm = A2(
 								]))
 						]))
 				]))
+		]));
+var $author$project$Page$ListDashboards$ShowForm = {$: 'ShowForm'};
+var $author$project$Page$ListDashboards$viewAddDashboardButton = A2(
+	$elm$html$Html$div,
+	_List_fromArray(
+		[
+			$elm$html$Html$Attributes$class('dashboard-square'),
+			$elm$html$Html$Events$onClick($author$project$Page$ListDashboards$ShowForm)
+		]),
+	_List_fromArray(
+		[
+			$elm$html$Html$text('+')
 		]));
 var $author$project$Page$ListDashboards$viewAddError = function (maybeError) {
 	if (maybeError.$ === 'Just') {
@@ -11765,19 +11801,9 @@ var $author$project$Page$ListDashboards$view = function (model) {
 		_List_Nil,
 		_List_fromArray(
 			[
-				A2(
-				$elm$html$Html$button,
-				_List_fromArray(
-					[
-						$elm$html$Html$Events$onClick($author$project$Page$ListDashboards$FetchDashboards)
-					]),
-				_List_fromArray(
-					[
-						$elm$html$Html$text('Refresh dashboards')
-					])),
 				$author$project$Page$ListDashboards$viewDashboards(model.dashboards),
 				$author$project$Page$ListDashboards$viewAddDashboardButton,
-				model.showAddDashboardForm ? $author$project$Page$ListDashboards$viewAddDashboardForm : $elm$html$Html$text(''),
+				model.showAddDashboardForm ? A2($elm$html$Html$map, $author$project$Page$ListDashboards$FormChanged, $author$project$Components$AddDashboardForm$view) : $elm$html$Html$text(''),
 				$author$project$Page$ListDashboards$viewDeleteError(model.deleteError),
 				$author$project$Page$ListDashboards$viewAddError(model.createError),
 				A3(

@@ -13,11 +13,13 @@ import Models.DataSource exposing (..)
 import Models.Widgets exposing (..)
 import RemoteData exposing (WebData)
 import Route
+import Components.AddDashboardForm as AddDashboardForm exposing (..)
+import Platform.Cmd as Cmd
 
 
 type alias Model =
     { dashboards : WebData (List DashboardInfo)
-    , newDashboard : Dashboard
+    , addDashboardForm : AddDashboardForm.Model
     , showAddDashboardForm : Bool
     , deleteError : Maybe String
     , createError : Maybe String
@@ -31,21 +33,9 @@ type Msg
     | DeleteDashboard DashboardId
     | DashboardDeleted (WebData (List DashboardInfo))
     | ShowForm
-    | FormChanged FormMsg
+    | FormChanged AddDashboardForm.Msg
     | DashboardCreated (Result Http.Error Dashboard)
     | GoToDashboard DashboardId
-
-
-type FormMsg
-    = UpdateTitle String
-    | UpdatePassword String
-    | UpdateUsername String
-    | UpdateHost String
-    | UpdatePortNumber Int
-    | UpdateDatabase String
-    | Cancel
-    | AddNewDashboard
-
 
 type alias DashboardInfo =
     { dashboard_id : DashboardId
@@ -75,7 +65,7 @@ init navKey =
 initialModel : Nav.Key -> Model
 initialModel navKey =
     { dashboards = RemoteData.NotAsked
-    , newDashboard = emptyDashboard
+    , addDashboardForm = AddDashboardForm.init
     , showAddDashboardForm = False
     , deleteError = Nothing
     , createError = Nothing
@@ -105,7 +95,19 @@ update msg model =
             ( { model | showAddDashboardForm = True }, Cmd.none )
 
         FormChanged formMsg ->
-            updateForm formMsg model
+            case formMsg of
+                AddDashboardForm.Cancel ->
+                    ( { model | showAddDashboardForm = False }, Cmd.none )
+
+                AddDashboardForm.AddNewDashboard ->
+                    ( { model | showAddDashboardForm = False }, create_dashboard model.addDashboardForm.dashboard )
+
+                _ ->
+                    let
+                        updatedForm =
+                            AddDashboardForm.update formMsg model.addDashboardForm
+                    in
+                    ( { model | addDashboardForm = updatedForm }, Cmd.none )
 
         DashboardCreated (Err httpError) ->
             ( { model | createError = Just (buildErrorMessage httpError) }, Cmd.none )
@@ -114,124 +116,14 @@ update msg model =
             ( model, Route.pushUrl (Route.Dashboard dashboardId) model.navKey )
 
 
-updateForm : FormMsg -> Model -> ( Model, Cmd Msg )
-updateForm msg model =
-    case msg of
-        UpdatePassword password ->
-            let
-                dataSource =
-                    model.newDashboard.dataSource
-
-                oldDashboard =
-                    model.newDashboard
-
-                updatedDataSource =
-                    { dataSource | password = password }
-
-                updatedDashboard =
-                    { oldDashboard | dataSource = updatedDataSource }
-            in
-            ( { model | newDashboard = updatedDashboard }, Cmd.none )
-
-        UpdateUsername username ->
-            let
-                dataSource =
-                    model.newDashboard.dataSource
-
-                oldDashboard =
-                    model.newDashboard
-
-                updatedDataSource =
-                    { dataSource | username = username }
-
-                updatedDashboard =
-                    { oldDashboard | dataSource = updatedDataSource }
-            in
-            ( { model | newDashboard = updatedDashboard }, Cmd.none )
-
-        UpdateHost host ->
-            let
-                dataSource =
-                    model.newDashboard.dataSource
-
-                oldDashboard =
-                    model.newDashboard
-
-                updatedDataSource =
-                    { dataSource | host = host }
-
-                updatedDashboard =
-                    { oldDashboard | dataSource = updatedDataSource }
-            in
-            ( { model | newDashboard = updatedDashboard }, Cmd.none )
-
-        UpdatePortNumber portNumber ->
-            let
-                dataSource =
-                    model.newDashboard.dataSource
-
-                oldDashboard =
-                    model.newDashboard
-
-                updatedDataSource =
-                    { dataSource | portNumber = portNumber }
-
-                updatedDashboard =
-                    { oldDashboard | dataSource = updatedDataSource }
-            in
-            ( { model | newDashboard = updatedDashboard }, Cmd.none )
-
-        UpdateDatabase database ->
-            let
-                dataSource =
-                    model.newDashboard.dataSource
-
-                oldDashboard =
-                    model.newDashboard
-
-                updatedDataSource =
-                    { dataSource | database = database }
-
-                updatedDashboard =
-                    { oldDashboard | dataSource = updatedDataSource }
-            in
-            ( { model | newDashboard = updatedDashboard }, Cmd.none )
-
-        UpdateTitle title ->
-            let
-                oldDashboard =
-                    model.newDashboard
-
-                updatedDashboard =
-                    { oldDashboard | title = title }
-            in
-            ( { model | newDashboard = updatedDashboard }, Cmd.none )
-
-        Cancel ->
-            ( { model | showAddDashboardForm = False }, Cmd.none )
-
-        AddNewDashboard ->
-            ( model, create_dashboard model.newDashboard )
-
-
-emptyDashboard : Dashboard
-emptyDashboard =
-    { dashboard_id = DashboardId -1
-    , title = ""
-    , dataSource = { host = "", portNumber = 0, username = "", password = "", database = "", tables = [] }
-    , widgets = []
-    }
-
-
 view : Model -> Html Msg
 view model =
     div []
-        [ button [ onClick FetchDashboards ]
-            [ text "Refresh dashboards" ]
-        , viewDashboards model.dashboards
+        [ 
+          viewDashboards model.dashboards
         , viewAddDashboardButton
         , if model.showAddDashboardForm then
-            viewAddDashboardForm
+            Html.map FormChanged AddDashboardForm.view
 
           else
             text ""
@@ -242,66 +134,6 @@ view model =
             , href "/styles/main.css"
             ]
             []
-        ]
-
-
-viewAddDashboardForm : Html Msg
-viewAddDashboardForm =
-    div [ class "form" ]
-        [ div [ class "form-content" ]
-            [ div [ class "form-group" ]
-                [ label [] [ text "Password" ]
-                , input
-                    [ type_ "password"
-                    , onInput (FormChanged << UpdatePassword)
-                    ]
-                    []
-                ]
-            , div [ class "form-group" ]
-                [ label [] [ text "Username" ]
-                , input
-                    [ type_ "text"
-                    , onInput (FormChanged << UpdateUsername)
-                    ]
-                    []
-                ]
-            , div [ class "form-group" ]
-                [ label [] [ text "Host" ]
-                , input
-                    [ type_ "text"
-                    , onInput (FormChanged << UpdateHost)
-                    ]
-                    []
-                ]
-            , div [ class "form-group" ]
-                [ label [] [ text "Port" ]
-                , input
-                    [ type_ "number"
-                    , onInput ((FormChanged << UpdatePortNumber) << Maybe.withDefault 0 << String.toInt)
-                    ]
-                    []
-                ]
-            , div [ class "form-group" ]
-                [ label [] [ text "Database" ]
-                , input
-                    [ type_ "text"
-                    , onInput (FormChanged << UpdateDatabase)
-                    ]
-                    []
-                ]
-            , div [ class "form-group" ]
-                [ label [] [ text "Dashboard Title" ]
-                , input
-                    [ type_ "text"
-                    , onInput (FormChanged << UpdateTitle)
-                    ]
-                    []
-                ]
-            , div [ class "form-buttons" ]
-                [ button [ onClick (FormChanged Cancel) ] [ text "Cancel" ]
-                , button [ onClick (FormChanged AddNewDashboard) ] [ text "Create" ]
-                ]
-            ]
         ]
 
 
