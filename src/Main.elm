@@ -1,8 +1,8 @@
-module Main exposing (..)
+module Main exposing (main)
 
 import Browser exposing (Document, UrlRequest)
 import Browser.Navigation as Nav
-import Html exposing (..)
+import Html exposing (Html, h3, node, text)
 import Html.Attributes exposing (href, rel)
 import Page.DashboardPage as DashboardPage
 import Page.ListDashboards as ListDashboards

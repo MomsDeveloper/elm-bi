@@ -1,4 +1,4 @@
-module Widgets.PieChart exposing (..)
+module Widgets.PieChart exposing (view)
 
 import Array exposing (Array)
 import Color exposing (Color)
@@ -62,9 +62,9 @@ view data =
         pieData =
             model |> List.map Tuple.second |> Shape.pie { defaultPieConfig | outerRadius = radius }
     in
-        svg [ viewBox 0 0 size size ]
-            [ g [ transform [ Translate (size / 2) (size / 2) ] ]
-                [ g [] <| List.indexedMap pieSlice pieData
-                , g [] <| List.map2 pieLabel pieData model
-                ]
+    svg [ viewBox 0 0 size size ]
+        [ g [ transform [ Translate (size / 2) (size / 2) ] ]
+            [ g [] <| List.indexedMap pieSlice pieData
+            , g [] <| List.map2 pieLabel pieData model
             ]
+        ]

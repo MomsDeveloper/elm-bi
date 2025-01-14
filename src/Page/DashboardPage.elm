@@ -1,17 +1,16 @@
-module Page.DashboardPage exposing (..)
+module Page.DashboardPage exposing (Model, Msg, init, update, view)
 
 import Browser.Navigation as Nav
-import Components.AddDashboardForm as EditDashboardForm exposing (..)
-import Components.AddWidgetForm as AddWidgetForm exposing (..)
+import Components.AddDashboardForm as EditDashboardForm exposing (emptyDashboard)
+import Components.AddWidgetForm as AddWidgetForm
 import Error exposing (buildErrorMessage)
-import Html exposing (..)
+import Html exposing (Html, button, div, h1, h3, p, text)
 import Html.Attributes exposing (class)
 import Html.Events exposing (onClick)
-import Http exposing (..)
+import Http
 import Json.Encode
-import Models.Dashboard as Dashboard exposing (..)
-import Models.DataSource exposing (..)
-import Models.Widgets exposing (..)
+import Models.Dashboard as Dashboard exposing (Dashboard, DashboardId, dashboardDecoder, dashboardEncoder)
+import Models.Widgets exposing (Widget(..), widgetEncoder)
 import RemoteData exposing (WebData)
 import Widgets.Histogram
 import Widgets.PieChart

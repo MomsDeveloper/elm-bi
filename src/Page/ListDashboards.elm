@@ -1,17 +1,15 @@
 module Page.ListDashboards exposing (Model, Msg, init, update, view)
 
 import Browser.Navigation as Nav
-import Components.AddDashboardForm as AddDashboardForm exposing (..)
+import Components.AddDashboardForm as AddDashboardForm exposing (Model)
 import Error exposing (buildErrorMessage)
-import Html exposing (..)
+import Html exposing (Html, button, div, h1, h3, p, text)
 import Html.Attributes exposing (class, type_)
-import Html.Events exposing (..)
-import Http exposing (..)
+import Html.Events exposing (onClick)
+import Http
 import Json.Decode exposing (Decoder, field, int, list, map2, string)
 import Json.Encode
-import Models.Dashboard as Dashboard exposing (..)
-import Models.DataSource exposing (..)
-import Models.Widgets exposing (..)
+import Models.Dashboard as Dashboard exposing (Dashboard, DashboardId, dashboardDecoder, dashboardEncoder)
 import Platform.Cmd as Cmd
 import RemoteData exposing (WebData)
 import Route
@@ -28,8 +26,7 @@ type alias Model =
 
 
 type Msg
-    = FetchDashboards
-    | DashboardsReceived (WebData (List DashboardInfo))
+    = DashboardsReceived (WebData (List DashboardInfo))
     | DeleteDashboard DashboardId
     | DashboardDeleted (WebData (List DashboardInfo))
     | ShowForm
@@ -49,7 +46,7 @@ dashBoardsInfoDecoder =
     list
         (map2
             (\dashboard_id title ->
-                { dashboard_id = DashboardId dashboard_id
+                { dashboard_id = Dashboard.DashboardId dashboard_id
                 , title = title
                 }
             )
@@ -77,9 +74,6 @@ initialModel navKey =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        FetchDashboards ->
-            ( { model | dashboards = RemoteData.Loading }, fetchDashboards )
-
         DashboardsReceived response ->
             ( { model | dashboards = response }, Cmd.none )
 

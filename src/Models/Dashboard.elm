@@ -1,8 +1,8 @@
-module Models.Dashboard exposing (..)
+module Models.Dashboard exposing (Dashboard, DashboardId(..), dashboardDecoder, dashboardEncoder, dashboardsDecoder, idDecoder, idEncoder, idParser, idToString)
 
 import Json.Decode exposing (Decoder, field, int, list, map, map4, string)
 import Json.Encode exposing (Value)
-import Models.DataSource exposing (..)
+import Models.DataSource exposing (DataSource, dataSourceDecoder, dataSourceEncoder)
 import Models.Widgets exposing (Widget, widgetDecoder, widgetEncoder)
 import Url.Parser exposing (Parser, custom)
 

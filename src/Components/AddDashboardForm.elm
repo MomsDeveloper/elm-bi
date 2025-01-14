@@ -1,11 +1,9 @@
-module Components.AddDashboardForm exposing (..)
+module Components.AddDashboardForm exposing (Model, Msg(..), emptyDashboard, init, update, view)
 
-import Html exposing (..)
-import Html.Attributes exposing (..)
-import Html.Events exposing (..)
-import Models.Dashboard exposing (..)
-import Models.DataSource exposing (..)
-import Models.Widgets exposing (..)
+import Html exposing (Html, button, div, input, label, text)
+import Html.Attributes exposing (class, type_, value)
+import Html.Events exposing (onClick, onInput)
+import Models.Dashboard exposing (Dashboard)
 
 
 type alias Model =
@@ -198,7 +196,7 @@ view dashboard =
 
 emptyDashboard : Dashboard
 emptyDashboard =
-    { dashboard_id = DashboardId -1
+    { dashboard_id = Models.Dashboard.DashboardId -1
     , title = ""
     , dataSource = { host = "", portNumber = 0, username = "", password = "", database = "", tables = [] }
     , widgets = []

@@ -3,7 +3,7 @@ module Route exposing (Route(..), parseUrl, pushUrl)
 import Browser.Navigation as Nav
 import Models.Dashboard exposing (DashboardId)
 import Url exposing (Url)
-import Url.Parser exposing (..)
+import Url.Parser exposing ((</>), Parser, map, oneOf, parse, s, top)
 
 
 type Route

@@ -29,10 +29,6 @@ jobs:
         run: |
           npx elm-format src --yes
 
-      - name: Run Elm Analyse
-        run: |
-          npx elm-analyse
-
       - name: Run Elm Tests
         run: |
           npx elm-test

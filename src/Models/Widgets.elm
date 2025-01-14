@@ -1,8 +1,8 @@
-module Models.Widgets exposing (..)
+module Models.Widgets exposing (Widget(..), widgetDecoder, widgetEncoder)
 
 import Json.Decode exposing (Decoder, andThen, field, int, map5, string)
 import Json.Encode exposing (Value)
-import Models.DataSource exposing (..)
+import Models.DataSource exposing (HistogramData, PieData, histogramDataDecoder, histogramDataEncoder, pieDataDecoder, pieDataEncoder)
 
 
 type Widget

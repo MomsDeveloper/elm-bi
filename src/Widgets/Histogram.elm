@@ -1,21 +1,21 @@
-module Widgets.Histogram exposing (..)
+module Widgets.Histogram exposing (view)
 
 import Axis
 import Color
 import Histogram exposing (Bin)
+import Models.DataSource exposing (HistogramData)
 import Scale exposing (ContinuousScale)
 import TypedSvg exposing (g, rect, svg)
 import TypedSvg.Attributes exposing (class, fill, transform, viewBox)
 import TypedSvg.Attributes.InPx exposing (height, width, x, y)
 import TypedSvg.Core exposing (Svg)
 import TypedSvg.Types exposing (Paint(..), Transform(..))
-import Models.DataSource exposing (HistogramData)
 
 
 histogram : Float -> Float -> List Float -> List (Bin Float Float)
 histogram minX maxX model =
     Histogram.float
-        |> Histogram.withDomain ( minX, maxX + 1)
+        |> Histogram.withDomain ( minX, maxX + 1 )
         |> Histogram.compute model
 
 
@@ -77,7 +77,6 @@ view model =
         data =
             List.map .data model
 
-
         minX =
             List.minimum data |> Maybe.withDefault 0
 
@@ -85,7 +84,7 @@ view model =
             List.maximum data |> Maybe.withDefault 20
 
         bins =
-            histogram  minX maxX data
+            histogram minX maxX data
 
         xScaleDynamic =
             xScale minX maxX

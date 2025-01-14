@@ -1,4 +1,4 @@
-module Models.DataSource exposing (..)
+module Models.DataSource exposing (DataSource, HistogramData, PieData, Table, TableColumn, WidgetData(..), dataSourceDecoder, dataSourceEncoder, histogramDataDecoder, histogramDataEncoder, pieDataDecoder, pieDataEncoder, tableColumnDecoder, tableColumnEncoder, tableDecoder, tableEncoder, tablesDecoder)
 
 import Json.Decode exposing (Decoder, field, float, int, list, map, map2, map6, string)
 import Json.Encode exposing (Value)

@@ -1,11 +1,11 @@
-module Components.AddWidgetForm exposing (..)
+module Components.AddWidgetForm exposing (Model, Msg(..), init, update, view)
 
-import Html exposing (..)
-import Html.Attributes exposing (..)
-import Html.Events exposing (..)
+import Html exposing (Html, button, div, h3, option, select, text)
+import Html.Attributes exposing (class, value)
+import Html.Events exposing (onClick, onInput)
 import List.Extra
-import Models.DataSource exposing (..)
-import Models.Widgets exposing (..)
+import Models.DataSource exposing (Table)
+import Models.Widgets exposing (Widget(..))
 
 
 type alias Model =
