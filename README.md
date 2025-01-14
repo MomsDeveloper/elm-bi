@@ -21,6 +21,6 @@
 ### Пример работы
 
 <p align="center">
-  <img src="./data/guide.gif" alt="guide" width="900"/>
+  <img src="./data/guide.gif" alt="guide"/>
 </p>
 
