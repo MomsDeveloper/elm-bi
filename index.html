@@ -7518,12 +7518,6 @@ var $author$project$Route$pushUrl = F2(
 var $author$project$Page$ListDashboards$update = F2(
 	function (msg, model) {
 		switch (msg.$) {
-			case 'FetchDashboards':
-				return _Utils_Tuple2(
-					_Utils_update(
-						model,
-						{dashboards: $krisajenkins$remotedata$RemoteData$Loading}),
-					$author$project$Page$ListDashboards$fetchDashboards);
 			case 'DashboardsReceived':
 				var response = msg.a;
 				return _Utils_Tuple2(
