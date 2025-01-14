@@ -3,6 +3,7 @@ module Main exposing (..)
 import Browser exposing (Document, UrlRequest)
 import Browser.Navigation as Nav
 import Html exposing (..)
+import Html.Attributes exposing (href, rel)
 import Page.DashboardPage as DashboardPage
 import Page.ListDashboards as ListDashboards
 import Route exposing (Route)
@@ -128,7 +129,14 @@ update msg model =
 view : Model -> Document Msg
 view model =
     { title = "Post App"
-    , body = [ currentView model ]
+    , body =
+        [ currentView model
+        , node "link"
+            [ rel "stylesheet"
+            , href "/styles/main.css"
+            ]
+            []
+        ]
     }
 
 

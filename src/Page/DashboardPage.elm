@@ -1,10 +1,11 @@
 module Page.DashboardPage exposing (..)
 
 import Browser.Navigation as Nav
+import Components.AddDashboardForm as EditDashboardForm exposing (..)
 import Components.AddWidgetForm as AddWidgetForm exposing (..)
 import Error exposing (buildErrorMessage)
 import Html exposing (..)
-import Html.Attributes exposing (class, href, rel)
+import Html.Attributes exposing (class)
 import Html.Events exposing (onClick)
 import Http exposing (..)
 import Json.Encode
@@ -20,14 +21,18 @@ type alias Model =
     { navKey : Nav.Key
     , dashboard : WebData Dashboard
     , addWidgetForm : AddWidgetForm.Model
+    , editDashboardForm : EditDashboardForm.Model
     , showAddWidgetForm : Bool
+    , showEditDashboardForm : Bool
     }
 
 
 type Msg
     = DashboardReceived (WebData Dashboard)
-    | ShowForm
+    | ShowAddWidgetForm
+    | ShowEditDashboardForm
     | WidgetFormChanged AddWidgetForm.Msg
+    | DashboardFormChanged EditDashboardForm.Msg
     | DeleteWidget Int
 
 
@@ -41,7 +46,9 @@ initialModel navKey =
     { navKey = navKey
     , dashboard = RemoteData.Loading
     , addWidgetForm = AddWidgetForm.init []
+    , editDashboardForm = EditDashboardForm.init
     , showAddWidgetForm = False
+    , showEditDashboardForm = False
     }
 
 
@@ -66,8 +73,20 @@ update msg model =
             in
             ( updatedModel, Cmd.none )
 
-        ShowForm ->
+        ShowAddWidgetForm ->
             ( { model | showAddWidgetForm = True }, Cmd.none )
+
+        ShowEditDashboardForm ->
+            let
+                currentDashboard =
+                    case model.dashboard of
+                        RemoteData.Success dashboardData ->
+                            dashboardData
+
+                        _ ->
+                            emptyDashboard
+            in
+            ( { model | showEditDashboardForm = True, editDashboardForm = EditDashboardForm.Model currentDashboard }, Cmd.none )
 
         WidgetFormChanged formMsg ->
             case formMsg of
@@ -100,6 +119,21 @@ update msg model =
                     in
                     ( { model | addWidgetForm = updatedForm }, Cmd.none )
 
+        DashboardFormChanged formMsg ->
+            case formMsg of
+                EditDashboardForm.Cancel ->
+                    ( { model | showEditDashboardForm = False }, Cmd.none )
+
+                EditDashboardForm.AddNewDashboard ->
+                    ( { model | showEditDashboardForm = False }, updateDashboard model.editDashboardForm.dashboard )
+
+                _ ->
+                    let
+                        updatedForm =
+                            EditDashboardForm.update formMsg model.editDashboardForm
+                    in
+                    ( { model | editDashboardForm = updatedForm }, Cmd.none )
+
         DeleteWidget widgetId ->
             case model.dashboard of
                 RemoteData.Success dashboardData ->
@@ -113,18 +147,21 @@ view : Model -> Html Msg
 view model =
     div []
         [ h3 [] [ text "Widgets" ]
-        , viewAddWidgetButton
+        , div []
+            [ viewAddWidgetButton
+            , viewEditDashboardButton
+            ]
         , if model.showAddWidgetForm then
             Html.map WidgetFormChanged (AddWidgetForm.view model.addWidgetForm)
 
           else
             text ""
+        , if model.showEditDashboardForm then
+            Html.map DashboardFormChanged (EditDashboardForm.view model.editDashboardForm.dashboard)
+
+          else
+            text ""
         , viewDashboard model.dashboard
-        , node "link"
-            [ rel "stylesheet"
-            , href "/styles/main.css"
-            ]
-            []
         ]
 
 
@@ -132,9 +169,18 @@ viewAddWidgetButton : Html Msg
 viewAddWidgetButton =
     div
         [ class "widget-square"
-        , onClick ShowForm
+        , onClick ShowAddWidgetForm
         ]
         [ text "+" ]
+
+
+viewEditDashboardButton : Html Msg
+viewEditDashboardButton =
+    div
+        [ class "widget-square"
+        , onClick ShowEditDashboardForm
+        ]
+        [ text "Edit" ]
 
 
 viewDashboard : WebData Dashboard -> Html Msg
@@ -218,13 +264,12 @@ deleteWidget dashboardId widgetId =
         }
 
 
-
--- updateDashboard : DashboardInfo -> Cmd Msg
--- updateDashboard dashboardInfo =
---     Http.post
---         { url = "http://127.0.0.1:6969/update-dashboard"
---         , body =
---             Http.jsonBody
---                 (dashboardInfoEncoder dashboardInfo)
---         , expect = Http.expectJson (DashboardReceived << RemoteData.fromResult) dashboardDecoder
---         }
+updateDashboard : Dashboard -> Cmd Msg
+updateDashboard dashboard =
+    Http.post
+        { url = "http://127.0.0.1:6969/update-dashboard"
+        , body =
+            Http.jsonBody
+                (dashboardEncoder dashboard)
+        , expect = Http.expectJson (DashboardReceived << RemoteData.fromResult) dashboardDecoder
+        }

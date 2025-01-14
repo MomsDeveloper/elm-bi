@@ -130,8 +130,8 @@ update msg model =
             model
 
 
-view : Html Msg
-view =
+view : Dashboard -> Html Msg
+view dashboard =
     div [ class "form" ]
         [ div [ class "form-content" ]
             [ div [ class "form-group" ]
@@ -139,6 +139,7 @@ view =
                 , input
                     [ type_ "password"
                     , onInput UpdatePassword
+                    , value dashboard.dataSource.password
                     ]
                     []
                 ]
@@ -147,6 +148,7 @@ view =
                 , input
                     [ type_ "text"
                     , onInput UpdateUsername
+                    , value dashboard.dataSource.username
                     ]
                     []
                 ]
@@ -155,6 +157,7 @@ view =
                 , input
                     [ type_ "text"
                     , onInput UpdateHost
+                    , value dashboard.dataSource.host
                     ]
                     []
                 ]
@@ -163,6 +166,7 @@ view =
                 , input
                     [ type_ "number"
                     , onInput (UpdatePortNumber << Maybe.withDefault 0 << String.toInt)
+                    , value (String.fromInt dashboard.dataSource.portNumber)
                     ]
                     []
                 ]
@@ -171,6 +175,7 @@ view =
                 , input
                     [ type_ "text"
                     , onInput UpdateDatabase
+                    , value dashboard.dataSource.database
                     ]
                     []
                 ]
@@ -179,6 +184,7 @@ view =
                 , input
                     [ type_ "text"
                     , onInput UpdateTitle
+                    , value dashboard.title
                     ]
                     []
                 ]

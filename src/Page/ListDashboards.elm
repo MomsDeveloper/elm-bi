@@ -3,7 +3,7 @@ module Page.ListDashboards exposing (Model, Msg, init, update, view)
 import Browser.Navigation as Nav
 import Error exposing (buildErrorMessage)
 import Html exposing (..)
-import Html.Attributes exposing (class, href, rel, type_)
+import Html.Attributes exposing (class, type_)
 import Html.Events exposing (..)
 import Http exposing (..)
 import Json.Decode exposing (Decoder, field, int, list, map2, string)
@@ -123,17 +123,12 @@ view model =
           viewDashboards model.dashboards
         , viewAddDashboardButton
         , if model.showAddDashboardForm then
-            Html.map FormChanged AddDashboardForm.view
+            Html.map FormChanged (AddDashboardForm.view model.addDashboardForm.dashboard)
 
           else
             text ""
         , viewDeleteError model.deleteError
         , viewAddError model.createError
-        , node "link"
-            [ rel "stylesheet"
-            , href "/styles/main.css"
-            ]
-            []
         ]
 
 
