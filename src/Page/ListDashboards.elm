@@ -9,6 +9,7 @@ import Html.Events exposing (onClick)
 import Http
 import Json.Decode exposing (Decoder, field, int, list, map2, string)
 import Json.Encode
+import Config exposing (apiUrl)
 import Models.Dashboard as Dashboard exposing (Dashboard, DashboardId, dashboardDecoder, dashboardEncoder)
 import Platform.Cmd as Cmd
 import RemoteData exposing (WebData)
@@ -214,7 +215,7 @@ viewAddError maybeError =
 fetchDashboards : Cmd Msg
 fetchDashboards =
     Http.post
-        { url = "http://127.0.0.1:6969/get-dashboards"
+        { url = apiUrl ++ "/get-dashboards"
         , body = Http.jsonBody (Json.Encode.object [])
         , expect =
             dashBoardsInfoDecoder
@@ -225,7 +226,7 @@ fetchDashboards =
 deleteDashboard : DashboardId -> Cmd Msg
 deleteDashboard dashboardId =
     Http.post
-        { url = "http://127.0.0.1:6969/delete-dashboard"
+        { url = apiUrl ++ "/delete-dashboard"
         , body =
             Http.jsonBody
                 (Json.Encode.object [ ( "dashboard_id", Dashboard.idEncoder dashboardId ) ])
@@ -238,7 +239,7 @@ deleteDashboard dashboardId =
 create_dashboard : Dashboard -> Cmd Msg
 create_dashboard dashboard =
     Http.post
-        { url = "http://127.0.0.1:6969/create-dashboard"
+        { url = apiUrl ++ "/create-dashboard"
         , body =
             Http.jsonBody
                 (dashboardEncoder dashboard)
