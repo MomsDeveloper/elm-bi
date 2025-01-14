@@ -100,7 +100,7 @@ toggleColumn columnName model =
 
 clearForm : Model -> Model
 clearForm model =
-    { model | widget = emptyWidget "", selectedTable = Table "" [], isWidgetTypeSelected = False }
+    { model | widget = emptyWidget "", selectedTable = Table "" [], isWidgetTypeSelected = False, errorMessage = Nothing }
 
 
 emptyWidget : String -> Widget
