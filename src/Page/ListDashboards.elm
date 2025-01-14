@@ -1,6 +1,7 @@
 module Page.ListDashboards exposing (Model, Msg, init, update, view)
 
 import Browser.Navigation as Nav
+import Components.AddDashboardForm as AddDashboardForm exposing (..)
 import Error exposing (buildErrorMessage)
 import Html exposing (..)
 import Html.Attributes exposing (class, type_)
@@ -11,10 +12,9 @@ import Json.Encode
 import Models.Dashboard as Dashboard exposing (..)
 import Models.DataSource exposing (..)
 import Models.Widgets exposing (..)
+import Platform.Cmd as Cmd
 import RemoteData exposing (WebData)
 import Route
-import Components.AddDashboardForm as AddDashboardForm exposing (..)
-import Platform.Cmd as Cmd
 
 
 type alias Model =
@@ -36,6 +36,7 @@ type Msg
     | FormChanged AddDashboardForm.Msg
     | DashboardCreated (Result Http.Error Dashboard)
     | GoToDashboard DashboardId
+
 
 type alias DashboardInfo =
     { dashboard_id : DashboardId
@@ -119,9 +120,8 @@ update msg model =
 view : Model -> Html Msg
 view model =
     div []
-        [ 
-          viewDashboards model.dashboards
-        , viewAddDashboardButton
+        [ viewHeader
+        , viewDashboards model.dashboards
         , if model.showAddDashboardForm then
             Html.map FormChanged (AddDashboardForm.view model.addDashboardForm.dashboard)
 
@@ -132,10 +132,18 @@ view model =
         ]
 
 
+viewHeader : Html Msg
+viewHeader =
+    div [ class "dashboard-header" ]
+        [ h1 [] [ text "Dashboards" ]
+        , p [] [ text "Manage your dashboards below. Click '+' to add a new dashboard." ]
+        ]
+
+
 viewAddDashboardButton : Html Msg
 viewAddDashboardButton =
     div
-        [ class "dashboard-square"
+        [ class "dashboard-square add"
         , onClick ShowForm
         ]
         [ text "+" ]
@@ -151,11 +159,8 @@ viewDashboards dashboards =
             h3 [] [ text "Loading..." ]
 
         RemoteData.Success actualDashboards ->
-            div []
-                [ h3 [] [ text "Dashboards" ]
-                , table []
-                    ([] ++ List.map viewDashboard actualDashboards)
-                ]
+            div [ class "dashboard-container" ]
+                (viewAddDashboardButton :: List.map viewDashboard actualDashboards)
 
         RemoteData.Failure httpError ->
             viewFetchError (buildErrorMessage httpError)
@@ -163,11 +168,14 @@ viewDashboards dashboards =
 
 viewDashboard : DashboardInfo -> Html Msg
 viewDashboard dashboard =
-    tr []
-        [ td [ class "dashboard-square", onClick (GoToDashboard dashboard.dashboard_id) ]
-            [ text dashboard.title ]
-        , td []
-            [ button [ type_ "button", onClick (DeleteDashboard dashboard.dashboard_id) ] [ text "Delete" ] ]
+    div [ class "dashboard-square", onClick (GoToDashboard dashboard.dashboard_id) ]
+        [ text dashboard.title
+        , button
+            [ class "delete-button"
+            , type_ "button"
+            , Html.Events.stopPropagationOn "click" (Json.Decode.succeed ( DeleteDashboard dashboard.dashboard_id, True ))
+            ]
+            [ text "✖" ]
         ]
 
 

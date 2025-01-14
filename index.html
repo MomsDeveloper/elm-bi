@@ -6422,6 +6422,7 @@ var $author$project$Components$AddWidgetForm$emptyWidget = function (widgetType)
 };
 var $author$project$Components$AddWidgetForm$init = function (tables) {
 	return {
+		errorMessage: $elm$core$Maybe$Nothing,
 		isWidgetTypeSelected: false,
 		selectedTable: A2($author$project$Models$DataSource$Table, '', _List_Nil),
 		tables: tables,
@@ -7234,8 +7235,15 @@ var $author$project$Components$AddWidgetForm$update = F2(
 						selectedTable: selectedTable,
 						widget: $author$project$Components$AddWidgetForm$emptyWidget(widgetType)
 					});
-			default:
+			case 'AddNewWidget':
 				return model;
+			default:
+				var error = msg.a;
+				return _Utils_update(
+					model,
+					{
+						errorMessage: $elm$core$Maybe$Just(error)
+					});
 		}
 	});
 var $author$project$Models$DataSource$tableColumnEncoder = function (tableColumn) {
@@ -7971,12 +7979,16 @@ var $author$project$Components$AddDashboardForm$view = function (dashboard) {
 };
 var $author$project$Components$AddWidgetForm$AddNewWidget = {$: 'AddNewWidget'};
 var $author$project$Components$AddWidgetForm$Cancel = {$: 'Cancel'};
+var $author$project$Components$AddWidgetForm$DisplayError = function (a) {
+	return {$: 'DisplayError', a: a};
+};
 var $author$project$Components$AddWidgetForm$TableSelected = function (a) {
 	return {$: 'TableSelected', a: a};
 };
 var $author$project$Components$AddWidgetForm$WidgetTypeSelected = function (a) {
 	return {$: 'WidgetTypeSelected', a: a};
 };
+var $elm$core$Basics$not = _Basics_not;
 var $elm$html$Html$option = _VirtualDom_node('option');
 var $elm$html$Html$select = _VirtualDom_node('select');
 var $author$project$Components$AddWidgetForm$ColumnToggled = function (a) {
@@ -7984,40 +7996,33 @@ var $author$project$Components$AddWidgetForm$ColumnToggled = function (a) {
 };
 var $author$project$Components$AddWidgetForm$viewTableColumns = function (table) {
 	return A2(
-		$elm$html$Html$div,
-		_List_Nil,
+		$elm$html$Html$select,
 		_List_fromArray(
 			[
-				A2(
-				$elm$html$Html$select,
-				_List_fromArray(
-					[
-						$elm$html$Html$Attributes$class('table-dropdown'),
-						$elm$html$Html$Events$onInput($author$project$Components$AddWidgetForm$ColumnToggled)
-					]),
-				A2(
-					$elm$core$List$map,
-					function (col) {
-						return A2(
-							$elm$html$Html$option,
-							_List_fromArray(
-								[
-									$elm$html$Html$Attributes$value(col.name)
-								]),
-							_List_fromArray(
-								[
-									$elm$html$Html$text(col.name)
-								]));
-					},
-					table.columns))
-			]));
+				$elm$html$Html$Events$onInput($author$project$Components$AddWidgetForm$ColumnToggled)
+			]),
+		A2(
+			$elm$core$List$map,
+			function (col) {
+				return A2(
+					$elm$html$Html$option,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$value(col.name)
+						]),
+					_List_fromArray(
+						[
+							$elm$html$Html$text(col.name)
+						]));
+			},
+			table.columns));
 };
 var $author$project$Components$AddWidgetForm$view = function (model) {
 	return A2(
 		$elm$html$Html$div,
 		_List_fromArray(
 			[
-				$elm$html$Html$Attributes$class('add-widget form')
+				$elm$html$Html$Attributes$class('form')
 			]),
 		_List_fromArray(
 			[
@@ -8048,11 +8053,20 @@ var $author$project$Components$AddWidgetForm$view = function (model) {
 								$elm$html$Html$select,
 								_List_fromArray(
 									[
-										$elm$html$Html$Attributes$class('table-dropdown'),
 										$elm$html$Html$Events$onInput($author$project$Components$AddWidgetForm$WidgetTypeSelected)
 									]),
 								_List_fromArray(
 									[
+										(!model.isWidgetTypeSelected) ? A2(
+										$elm$html$Html$option,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$value('PieChart')
+											]),
+										_List_fromArray(
+											[
+												$elm$html$Html$text('Choose a widget')
+											])) : $elm$html$Html$text(''),
 										A2(
 										$elm$html$Html$option,
 										_List_fromArray(
@@ -8084,10 +8098,16 @@ var $author$project$Components$AddWidgetForm$view = function (model) {
 						_List_fromArray(
 							[
 								A2(
+								$elm$html$Html$div,
+								_List_Nil,
+								_List_fromArray(
+									[
+										$elm$html$Html$text('Select table:')
+									])),
+								A2(
 								$elm$html$Html$select,
 								_List_fromArray(
 									[
-										$elm$html$Html$Attributes$class('table-dropdown'),
 										$elm$html$Html$Events$onInput($author$project$Components$AddWidgetForm$TableSelected)
 									]),
 								A2(
@@ -8115,42 +8135,65 @@ var $author$project$Components$AddWidgetForm$view = function (model) {
 								$author$project$Components$AddWidgetForm$viewTableColumns(model.selectedTable)
 							])) : $elm$html$Html$text(''),
 						A2(
-						$elm$html$Html$button,
+						$elm$html$Html$div,
 						_List_fromArray(
 							[
-								$elm$html$Html$Attributes$class('add-widget-button'),
-								$elm$html$Html$Events$onClick($author$project$Components$AddWidgetForm$AddNewWidget)
+								$elm$html$Html$Attributes$class('form-buttons')
 							]),
 						_List_fromArray(
 							[
-								$elm$html$Html$text('Add Widget')
-							])),
-						A2(
-						$elm$html$Html$button,
-						_List_fromArray(
-							[
-								$elm$html$Html$Attributes$class('cancel-button'),
-								$elm$html$Html$Events$onClick($author$project$Components$AddWidgetForm$Cancel)
-							]),
-						_List_fromArray(
-							[
-								$elm$html$Html$text('Cancel')
+								A2(
+								$elm$html$Html$button,
+								_List_fromArray(
+									[
+										$elm$html$Html$Events$onClick($author$project$Components$AddWidgetForm$Cancel)
+									]),
+								_List_fromArray(
+									[
+										$elm$html$Html$text('Cancel')
+									])),
+								model.isWidgetTypeSelected ? A2(
+								$elm$html$Html$button,
+								_List_fromArray(
+									[
+										$elm$html$Html$Events$onClick($author$project$Components$AddWidgetForm$AddNewWidget)
+									]),
+								_List_fromArray(
+									[
+										$elm$html$Html$text('Add Widget')
+									])) : A2(
+								$elm$html$Html$button,
+								_List_fromArray(
+									[
+										$elm$html$Html$Events$onClick(
+										$author$project$Components$AddWidgetForm$DisplayError('Please select a widget'))
+									]),
+								_List_fromArray(
+									[
+										$elm$html$Html$text('Add Widget')
+									]))
 							]))
-					]))
+					])),
+				function () {
+				var _v0 = model.errorMessage;
+				if (_v0.$ === 'Just') {
+					var error = _v0.a;
+					return A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('error')
+							]),
+						_List_fromArray(
+							[
+								$elm$html$Html$text(error)
+							]));
+				} else {
+					return $elm$html$Html$text('');
+				}
+			}()
 			]));
 };
-var $author$project$Page$DashboardPage$ShowAddWidgetForm = {$: 'ShowAddWidgetForm'};
-var $author$project$Page$DashboardPage$viewAddWidgetButton = A2(
-	$elm$html$Html$div,
-	_List_fromArray(
-		[
-			$elm$html$Html$Attributes$class('widget-square'),
-			$elm$html$Html$Events$onClick($author$project$Page$DashboardPage$ShowAddWidgetForm)
-		]),
-	_List_fromArray(
-		[
-			$elm$html$Html$text('+')
-		]));
 var $author$project$Page$DashboardPage$viewFetchError = function (errorMessage) {
 	var errorHeading = 'Couldn\'t fetch dashboard at this time.';
 	return A2(
@@ -8356,368 +8399,6 @@ var $elm_community$typed_svg$TypedSvg$Attributes$InPx$x = function (value) {
 	return $elm_community$typed_svg$TypedSvg$Attributes$x(
 		$elm_community$typed_svg$TypedSvg$Types$px(value));
 };
-var $gampleman$elm_visualization$Scale$Scale = function (a) {
-	return {$: 'Scale', a: a};
-};
-var $elm$core$Basics$always = F2(
-	function (a, _v0) {
-		return a;
-	});
-var $elm$core$Basics$isNaN = _Basics_isNaN;
-var $gampleman$elm_visualization$Scale$Continuous$normalize = F2(
-	function (a, b) {
-		var c = b - a;
-		return (!c) ? $elm$core$Basics$always(0.5) : ($elm$core$Basics$isNaN(c) ? $elm$core$Basics$always(0 / 0) : function (x) {
-			return (x - a) / c;
-		});
-	});
-var $gampleman$elm_visualization$Scale$Continuous$bimap = F3(
-	function (_v0, _v1, interpolate) {
-		var d0 = _v0.a;
-		var d1 = _v0.b;
-		var r0 = _v1.a;
-		var r1 = _v1.b;
-		var _v2 = (_Utils_cmp(d1, d0) < 0) ? _Utils_Tuple2(
-			A2($gampleman$elm_visualization$Scale$Continuous$normalize, d1, d0),
-			A2(interpolate, r1, r0)) : _Utils_Tuple2(
-			A2($gampleman$elm_visualization$Scale$Continuous$normalize, d0, d1),
-			A2(interpolate, r0, r1));
-		var de = _v2.a;
-		var re = _v2.b;
-		return A2($elm$core$Basics$composeL, re, de);
-	});
-var $gampleman$elm_visualization$Scale$Continuous$convertTransform = F4(
-	function (transform, interpolate, _v0, range) {
-		var d0 = _v0.a;
-		var d1 = _v0.b;
-		return A2(
-			$elm$core$Basics$composeR,
-			transform,
-			A3(
-				$gampleman$elm_visualization$Scale$Continuous$bimap,
-				_Utils_Tuple2(
-					transform(d0),
-					transform(d1)),
-				range,
-				interpolate));
-	});
-var $gampleman$elm_visualization$Interpolation$float = F2(
-	function (a, to) {
-		var b = to - a;
-		return function (t) {
-			return a + (b * t);
-		};
-	});
-var $gampleman$elm_visualization$Scale$Continuous$invertTransform = F4(
-	function (transform, untransform, _v0, range) {
-		var d0 = _v0.a;
-		var d1 = _v0.b;
-		return A2(
-			$elm$core$Basics$composeR,
-			A3(
-				$gampleman$elm_visualization$Scale$Continuous$bimap,
-				range,
-				_Utils_Tuple2(
-					transform(d0),
-					transform(d1)),
-				$gampleman$elm_visualization$Interpolation$float),
-			untransform);
-	});
-var $elm$core$Basics$ge = _Utils_ge;
-var $gampleman$elm_visualization$Scale$Continuous$fixPoint = F3(
-	function (maxIterations, initialInput, fn) {
-		var helper = F2(
-			function (iters, _v0) {
-				helper:
-				while (true) {
-					var a = _v0.a;
-					var b = _v0.b;
-					if (_Utils_cmp(iters + 1, maxIterations) > -1) {
-						return b;
-					} else {
-						var _v1 = fn(b);
-						var outA = _v1.a;
-						var outB = _v1.b;
-						if (_Utils_eq(outA, a)) {
-							return b;
-						} else {
-							if (!outA) {
-								return b;
-							} else {
-								var $temp$iters = iters + 1,
-									$temp$_v0 = _Utils_Tuple2(outA, outB);
-								iters = $temp$iters;
-								_v0 = $temp$_v0;
-								continue helper;
-							}
-						}
-					}
-				}
-			});
-		return A2(
-			helper,
-			1,
-			fn(initialInput));
-	});
-var $elm$core$Basics$e = _Basics_e;
-var $elm$core$Basics$sqrt = _Basics_sqrt;
-var $gampleman$elm_visualization$Scale$Continuous$e10 = $elm$core$Basics$sqrt(50);
-var $gampleman$elm_visualization$Scale$Continuous$e2 = $elm$core$Basics$sqrt(2);
-var $gampleman$elm_visualization$Scale$Continuous$e5 = $elm$core$Basics$sqrt(10);
-var $gampleman$elm_visualization$Scale$Continuous$ln10 = A2($elm$core$Basics$logBase, $elm$core$Basics$e, 10);
-var $elm$core$Basics$pow = _Basics_pow;
-var $gampleman$elm_visualization$Scale$Continuous$tickIncrement = F3(
-	function (start, stop, count) {
-		var step = (stop - start) / A2($elm$core$Basics$max, 0, count);
-		var powr = $elm$core$Basics$floor(
-			A2($elm$core$Basics$logBase, $elm$core$Basics$e, step) / $gampleman$elm_visualization$Scale$Continuous$ln10);
-		var error = step / A2($elm$core$Basics$pow, 10, powr);
-		var order = (_Utils_cmp(error, $gampleman$elm_visualization$Scale$Continuous$e10) > -1) ? 10 : ((_Utils_cmp(error, $gampleman$elm_visualization$Scale$Continuous$e5) > -1) ? 5 : ((_Utils_cmp(error, $gampleman$elm_visualization$Scale$Continuous$e2) > -1) ? 2 : 1));
-		return (powr >= 0) ? (order * A2($elm$core$Basics$pow, 10, powr)) : ((-A2($elm$core$Basics$pow, 10, -powr)) / order);
-	});
-var $gampleman$elm_visualization$Scale$Continuous$withNormalizedDomain = F2(
-	function (fn, _v0) {
-		var a = _v0.a;
-		var b = _v0.b;
-		if (_Utils_cmp(a, b) < 0) {
-			return fn(
-				_Utils_Tuple2(a, b));
-		} else {
-			var _v1 = fn(
-				_Utils_Tuple2(b, a));
-			var d = _v1.a;
-			var c = _v1.b;
-			return _Utils_Tuple2(c, d);
-		}
-	});
-var $gampleman$elm_visualization$Scale$Continuous$nice = F2(
-	function (domain, count) {
-		var computation = function (_v0) {
-			var start = _v0.a;
-			var stop = _v0.b;
-			var step = A3($gampleman$elm_visualization$Scale$Continuous$tickIncrement, start, stop, count);
-			return _Utils_Tuple2(
-				step,
-				(step > 0) ? _Utils_Tuple2(
-					$elm$core$Basics$floor(start / step) * step,
-					$elm$core$Basics$ceiling(stop / step) * step) : ((step < 0) ? _Utils_Tuple2(
-					$elm$core$Basics$ceiling(start * step) / step,
-					$elm$core$Basics$floor(stop * step) / step) : _Utils_Tuple2(start, stop)));
-		};
-		return A2(
-			$gampleman$elm_visualization$Scale$Continuous$withNormalizedDomain,
-			function (dmn) {
-				return A3($gampleman$elm_visualization$Scale$Continuous$fixPoint, 10, dmn, computation);
-			},
-			domain);
-	});
-var $elm$core$Basics$abs = function (n) {
-	return (n < 0) ? (-n) : n;
-};
-var $gampleman$elm_visualization$Scale$Continuous$exponent = function (num) {
-	var helper = F2(
-		function (soFar, x) {
-			helper:
-			while (true) {
-				if (!x) {
-					return soFar;
-				} else {
-					if (x < 1) {
-						var $temp$soFar = 1 + soFar,
-							$temp$x = x * 10;
-						soFar = $temp$soFar;
-						x = $temp$x;
-						continue helper;
-					} else {
-						return soFar;
-					}
-				}
-			}
-		});
-	return A2(helper, 0, num);
-};
-var $gampleman$elm_visualization$Scale$Continuous$precisionFixed = function (step) {
-	return A2(
-		$elm$core$Basics$max,
-		0,
-		$gampleman$elm_visualization$Scale$Continuous$exponent(
-			$elm$core$Basics$abs(step)));
-};
-var $gampleman$elm_visualization$Statistics$tickStep = F3(
-	function (start, stop, count) {
-		var step0 = $elm$core$Basics$abs(stop - start) / A2($elm$core$Basics$max, 0, count);
-		var step1 = A2(
-			$elm$core$Basics$pow,
-			10,
-			$elm$core$Basics$floor(
-				A2($elm$core$Basics$logBase, $elm$core$Basics$e, step0) / A2($elm$core$Basics$logBase, $elm$core$Basics$e, 10)));
-		var error = step0 / step1;
-		var step2 = (_Utils_cmp(
-			error,
-			$elm$core$Basics$sqrt(50)) > -1) ? (step1 * 10) : ((_Utils_cmp(
-			error,
-			$elm$core$Basics$sqrt(10)) > -1) ? (step1 * 5) : ((_Utils_cmp(
-			error,
-			$elm$core$Basics$sqrt(2)) > -1) ? (step1 * 2) : step1));
-		return (_Utils_cmp(stop, start) < 0) ? (-step2) : step2;
-	});
-var $elm$core$String$cons = _String_cons;
-var $elm$core$String$fromChar = function (_char) {
-	return A2($elm$core$String$cons, _char, '');
-};
-var $elm$core$Bitwise$and = _Bitwise_and;
-var $elm$core$Bitwise$shiftRightBy = _Bitwise_shiftRightBy;
-var $elm$core$String$repeatHelp = F3(
-	function (n, chunk, result) {
-		return (n <= 0) ? result : A3(
-			$elm$core$String$repeatHelp,
-			n >> 1,
-			_Utils_ap(chunk, chunk),
-			(!(n & 1)) ? result : _Utils_ap(result, chunk));
-	});
-var $elm$core$String$repeat = F2(
-	function (n, chunk) {
-		return A3($elm$core$String$repeatHelp, n, chunk, '');
-	});
-var $elm$core$String$padRight = F3(
-	function (n, _char, string) {
-		return _Utils_ap(
-			string,
-			A2(
-				$elm$core$String$repeat,
-				n - $elm$core$String$length(string),
-				$elm$core$String$fromChar(_char)));
-	});
-var $gampleman$elm_visualization$Scale$Continuous$toFixed = F2(
-	function (precision, value) {
-		var power_ = A2($elm$core$Basics$pow, 10, precision);
-		var pad = function (num) {
-			_v0$2:
-			while (true) {
-				if (num.b) {
-					if (num.b.b) {
-						if (!num.b.b.b) {
-							var x = num.a;
-							var _v1 = num.b;
-							var y = _v1.a;
-							return _List_fromArray(
-								[
-									x,
-									A3(
-									$elm$core$String$padRight,
-									precision,
-									_Utils_chr('0'),
-									y)
-								]);
-						} else {
-							break _v0$2;
-						}
-					} else {
-						var val = num.a;
-						return (precision > 0) ? _List_fromArray(
-							[
-								val,
-								A3(
-								$elm$core$String$padRight,
-								precision,
-								_Utils_chr('0'),
-								'')
-							]) : _List_fromArray(
-							[val]);
-					}
-				} else {
-					break _v0$2;
-				}
-			}
-			var val = num;
-			return val;
-		};
-		return A2(
-			$elm$core$String$join,
-			'.',
-			pad(
-				A2(
-					$elm$core$String$split,
-					'.',
-					$elm$core$String$fromFloat(
-						$elm$core$Basics$round(value * power_) / power_))));
-	});
-var $gampleman$elm_visualization$Scale$Continuous$tickFormat = F2(
-	function (_v0, count) {
-		var start = _v0.a;
-		var stop = _v0.b;
-		return $gampleman$elm_visualization$Scale$Continuous$toFixed(
-			$gampleman$elm_visualization$Scale$Continuous$precisionFixed(
-				A3($gampleman$elm_visualization$Statistics$tickStep, start, stop, count)));
-	});
-var $elmcraft$core_extra$Float$Extra$range = F3(
-	function (start, stop, step) {
-		if (!step) {
-			return _List_Nil;
-		} else {
-			var n = A2(
-				$elm$core$Basics$max,
-				0,
-				$elm$core$Basics$ceiling((stop - start) / step));
-			var helper = F2(
-				function (i, list) {
-					helper:
-					while (true) {
-						if (i >= 0) {
-							var $temp$i = i - 1,
-								$temp$list = A2($elm$core$List$cons, start + (step * i), list);
-							i = $temp$i;
-							list = $temp$list;
-							continue helper;
-						} else {
-							return list;
-						}
-					}
-				});
-			return A2(helper, n - 1, _List_Nil);
-		}
-	});
-var $gampleman$elm_visualization$Statistics$range = $elmcraft$core_extra$Float$Extra$range;
-var $gampleman$elm_visualization$Statistics$ticks = F3(
-	function (start, stop, count) {
-		var step = A3($gampleman$elm_visualization$Statistics$tickStep, start, stop, count);
-		var end = ($elm$core$Basics$floor(stop / step) * step) + (step / 2);
-		var beg = $elm$core$Basics$ceiling(start / step) * step;
-		return A3($gampleman$elm_visualization$Statistics$range, beg, end, step);
-	});
-var $gampleman$elm_visualization$Scale$Continuous$ticks = F2(
-	function (_v0, count) {
-		var start = _v0.a;
-		var end = _v0.b;
-		return A3($gampleman$elm_visualization$Statistics$ticks, start, end, count);
-	});
-var $gampleman$elm_visualization$Scale$Continuous$scaleWithTransform = F4(
-	function (transform, untransform, range_, domain_) {
-		return {
-			convert: A2($gampleman$elm_visualization$Scale$Continuous$convertTransform, transform, $gampleman$elm_visualization$Interpolation$float),
-			domain: domain_,
-			invert: A2($gampleman$elm_visualization$Scale$Continuous$invertTransform, transform, untransform),
-			nice: $gampleman$elm_visualization$Scale$Continuous$nice,
-			range: range_,
-			rangeExtent: F2(
-				function (_v0, r) {
-					return r;
-				}),
-			tickFormat: $gampleman$elm_visualization$Scale$Continuous$tickFormat,
-			ticks: $gampleman$elm_visualization$Scale$Continuous$ticks
-		};
-	});
-var $gampleman$elm_visualization$Scale$Continuous$linear = A2($gampleman$elm_visualization$Scale$Continuous$scaleWithTransform, $elm$core$Basics$identity, $elm$core$Basics$identity);
-var $gampleman$elm_visualization$Scale$linear = F2(
-	function (range_, domain_) {
-		return $gampleman$elm_visualization$Scale$Scale(
-			A2($gampleman$elm_visualization$Scale$Continuous$linear, range_, domain_));
-	});
-var $author$project$Widgets$Histogram$w = 900;
-var $author$project$Widgets$Histogram$xScale = A2(
-	$gampleman$elm_visualization$Scale$linear,
-	_Utils_Tuple2(0, $author$project$Widgets$Histogram$w - (2 * $author$project$Widgets$Histogram$padding)),
-	_Utils_Tuple2(0, 20));
 var $elm_community$typed_svg$TypedSvg$Attributes$y = function (length) {
 	return A2(
 		$elm_community$typed_svg$TypedSvg$Core$attribute,
@@ -8728,8 +8409,8 @@ var $elm_community$typed_svg$TypedSvg$Attributes$InPx$y = function (value) {
 	return $elm_community$typed_svg$TypedSvg$Attributes$y(
 		$elm_community$typed_svg$TypedSvg$Types$px(value));
 };
-var $author$project$Widgets$Histogram$column = F2(
-	function (yScale, _v0) {
+var $author$project$Widgets$Histogram$column = F3(
+	function (xScaleColumn, yScale, _v0) {
 		var length = _v0.length;
 		var x0 = _v0.x0;
 		var x1 = _v0.x1;
@@ -8738,11 +8419,11 @@ var $author$project$Widgets$Histogram$column = F2(
 			_List_fromArray(
 				[
 					$elm_community$typed_svg$TypedSvg$Attributes$InPx$x(
-					A2($gampleman$elm_visualization$Scale$convert, $author$project$Widgets$Histogram$xScale, x0)),
+					A2($gampleman$elm_visualization$Scale$convert, xScaleColumn, x0)),
 					$elm_community$typed_svg$TypedSvg$Attributes$InPx$y(
 					A2($gampleman$elm_visualization$Scale$convert, yScale, length)),
 					$elm_community$typed_svg$TypedSvg$Attributes$InPx$width(
-					A2($gampleman$elm_visualization$Scale$convert, $author$project$Widgets$Histogram$xScale, x1) - A2($gampleman$elm_visualization$Scale$convert, $author$project$Widgets$Histogram$xScale, x0)),
+					A2($gampleman$elm_visualization$Scale$convert, xScaleColumn, x1) - A2($gampleman$elm_visualization$Scale$convert, xScaleColumn, x0)),
 					$elm_community$typed_svg$TypedSvg$Attributes$InPx$height(
 					($author$project$Widgets$Histogram$h - A2($gampleman$elm_visualization$Scale$convert, yScale, length)) - (2 * $author$project$Widgets$Histogram$padding)),
 					$elm_community$typed_svg$TypedSvg$Attributes$fill(
@@ -8752,8 +8433,10 @@ var $author$project$Widgets$Histogram$column = F2(
 			_List_Nil);
 	});
 var $elm_community$typed_svg$TypedSvg$g = $elm_community$typed_svg$TypedSvg$Core$node('g');
+var $elm$core$Bitwise$and = _Bitwise_and;
 var $elm$core$Bitwise$shiftRightZfBy = _Bitwise_shiftRightZfBy;
 var $elm$core$Array$bitMask = 4294967295 >>> (32 - $elm$core$Array$shiftStep);
+var $elm$core$Basics$ge = _Utils_ge;
 var $elm$core$Elm$JsArray$unsafeGet = _JsArray_unsafeGet;
 var $elm$core$Array$getHelp = F3(
 	function (shift, index, tree) {
@@ -9201,6 +8884,58 @@ var $gampleman$elm_visualization$Histogram$custom = F2(
 				value: _function
 			});
 	});
+var $elmcraft$core_extra$Float$Extra$range = F3(
+	function (start, stop, step) {
+		if (!step) {
+			return _List_Nil;
+		} else {
+			var n = A2(
+				$elm$core$Basics$max,
+				0,
+				$elm$core$Basics$ceiling((stop - start) / step));
+			var helper = F2(
+				function (i, list) {
+					helper:
+					while (true) {
+						if (i >= 0) {
+							var $temp$i = i - 1,
+								$temp$list = A2($elm$core$List$cons, start + (step * i), list);
+							i = $temp$i;
+							list = $temp$list;
+							continue helper;
+						} else {
+							return list;
+						}
+					}
+				});
+			return A2(helper, n - 1, _List_Nil);
+		}
+	});
+var $gampleman$elm_visualization$Statistics$range = $elmcraft$core_extra$Float$Extra$range;
+var $elm$core$Basics$abs = function (n) {
+	return (n < 0) ? (-n) : n;
+};
+var $elm$core$Basics$e = _Basics_e;
+var $elm$core$Basics$pow = _Basics_pow;
+var $elm$core$Basics$sqrt = _Basics_sqrt;
+var $gampleman$elm_visualization$Statistics$tickStep = F3(
+	function (start, stop, count) {
+		var step0 = $elm$core$Basics$abs(stop - start) / A2($elm$core$Basics$max, 0, count);
+		var step1 = A2(
+			$elm$core$Basics$pow,
+			10,
+			$elm$core$Basics$floor(
+				A2($elm$core$Basics$logBase, $elm$core$Basics$e, step0) / A2($elm$core$Basics$logBase, $elm$core$Basics$e, 10)));
+		var error = step0 / step1;
+		var step2 = (_Utils_cmp(
+			error,
+			$elm$core$Basics$sqrt(50)) > -1) ? (step1 * 10) : ((_Utils_cmp(
+			error,
+			$elm$core$Basics$sqrt(10)) > -1) ? (step1 * 5) : ((_Utils_cmp(
+			error,
+			$elm$core$Basics$sqrt(2)) > -1) ? (step1 * 2) : step1));
+		return (_Utils_cmp(stop, start) < 0) ? (-step2) : step2;
+	});
 var $gampleman$elm_visualization$Histogram$binCount = F2(
 	function (_v0, num) {
 		var x0 = _v0.a;
@@ -9227,6 +8962,10 @@ var $gampleman$elm_visualization$Histogram$generator = function (f) {
 	return A2($gampleman$elm_visualization$Histogram$custom, $gampleman$elm_visualization$Histogram$sturges, f);
 };
 var $gampleman$elm_visualization$Histogram$float = $gampleman$elm_visualization$Histogram$generator($elm$core$Basics$identity);
+var $elm$core$Basics$always = F2(
+	function (a, _v0) {
+		return a;
+	});
 var $gampleman$elm_visualization$Histogram$limitedBy = F2(
 	function (domain, _v0) {
 		var cfg = _v0.a;
@@ -9239,14 +8978,35 @@ var $gampleman$elm_visualization$Histogram$withDomain = A2(
 	$elm$core$Basics$composeR,
 	$elm$core$Maybe$Just,
 	A2($elm$core$Basics$composeR, $elm$core$Basics$always, $gampleman$elm_visualization$Histogram$limitedBy));
-var $author$project$Widgets$Histogram$histogram = function (model) {
-	return A2(
-		$gampleman$elm_visualization$Histogram$compute,
-		model,
-		A2(
-			$gampleman$elm_visualization$Histogram$withDomain,
-			_Utils_Tuple2(0, 20),
-			$gampleman$elm_visualization$Histogram$float));
+var $author$project$Widgets$Histogram$histogram = F3(
+	function (minX, maxX, model) {
+		return A2(
+			$gampleman$elm_visualization$Histogram$compute,
+			model,
+			A2(
+				$gampleman$elm_visualization$Histogram$withDomain,
+				_Utils_Tuple2(minX, maxX + 1),
+				$gampleman$elm_visualization$Histogram$float));
+	});
+var $elm$core$List$maximum = function (list) {
+	if (list.b) {
+		var x = list.a;
+		var xs = list.b;
+		return $elm$core$Maybe$Just(
+			A3($elm$core$List$foldl, $elm$core$Basics$max, x, xs));
+	} else {
+		return $elm$core$Maybe$Nothing;
+	}
+};
+var $elm$core$List$minimum = function (list) {
+	if (list.b) {
+		var x = list.a;
+		var xs = list.b;
+		return $elm$core$Maybe$Just(
+			A3($elm$core$List$foldl, $elm$core$Basics$min, x, xs));
+	} else {
+		return $elm$core$Maybe$Nothing;
+	}
 };
 var $elm_community$typed_svg$TypedSvg$svg = $elm_community$typed_svg$TypedSvg$Core$node('svg');
 var $elm_community$typed_svg$TypedSvg$TypesToStrings$transformToString = function (xform) {
@@ -9341,6 +9101,7 @@ var $elm_community$typed_svg$TypedSvg$Attributes$viewBox = F4(
 					_List_fromArray(
 						[minX, minY, vWidth, vHeight]))));
 	});
+var $author$project$Widgets$Histogram$w = 900;
 var $elm$svg$Svg$Attributes$class = _VirtualDom_attribute('class');
 var $gampleman$elm_visualization$Scale$tickFormat = function (_v0) {
 	var opts = _v0.a;
@@ -9549,7 +9310,315 @@ var $gampleman$elm_visualization$Axis$verticalAttrs = {
 	y2: A2($elm$core$Basics$composeL, $elm$svg$Svg$Attributes$x2, $elm$core$String$fromFloat)
 };
 var $gampleman$elm_visualization$Axis$bottom = A4($gampleman$elm_visualization$Axis$element, $gampleman$elm_visualization$Axis$verticalAttrs, 1, '0.71em', 'middle');
-var $author$project$Widgets$Histogram$xAxis = A2($gampleman$elm_visualization$Axis$bottom, _List_Nil, $author$project$Widgets$Histogram$xScale);
+var $author$project$Widgets$Histogram$xAxis = function (scale) {
+	return A2($gampleman$elm_visualization$Axis$bottom, _List_Nil, scale);
+};
+var $gampleman$elm_visualization$Scale$Scale = function (a) {
+	return {$: 'Scale', a: a};
+};
+var $elm$core$Basics$isNaN = _Basics_isNaN;
+var $gampleman$elm_visualization$Scale$Continuous$normalize = F2(
+	function (a, b) {
+		var c = b - a;
+		return (!c) ? $elm$core$Basics$always(0.5) : ($elm$core$Basics$isNaN(c) ? $elm$core$Basics$always(0 / 0) : function (x) {
+			return (x - a) / c;
+		});
+	});
+var $gampleman$elm_visualization$Scale$Continuous$bimap = F3(
+	function (_v0, _v1, interpolate) {
+		var d0 = _v0.a;
+		var d1 = _v0.b;
+		var r0 = _v1.a;
+		var r1 = _v1.b;
+		var _v2 = (_Utils_cmp(d1, d0) < 0) ? _Utils_Tuple2(
+			A2($gampleman$elm_visualization$Scale$Continuous$normalize, d1, d0),
+			A2(interpolate, r1, r0)) : _Utils_Tuple2(
+			A2($gampleman$elm_visualization$Scale$Continuous$normalize, d0, d1),
+			A2(interpolate, r0, r1));
+		var de = _v2.a;
+		var re = _v2.b;
+		return A2($elm$core$Basics$composeL, re, de);
+	});
+var $gampleman$elm_visualization$Scale$Continuous$convertTransform = F4(
+	function (transform, interpolate, _v0, range) {
+		var d0 = _v0.a;
+		var d1 = _v0.b;
+		return A2(
+			$elm$core$Basics$composeR,
+			transform,
+			A3(
+				$gampleman$elm_visualization$Scale$Continuous$bimap,
+				_Utils_Tuple2(
+					transform(d0),
+					transform(d1)),
+				range,
+				interpolate));
+	});
+var $gampleman$elm_visualization$Interpolation$float = F2(
+	function (a, to) {
+		var b = to - a;
+		return function (t) {
+			return a + (b * t);
+		};
+	});
+var $gampleman$elm_visualization$Scale$Continuous$invertTransform = F4(
+	function (transform, untransform, _v0, range) {
+		var d0 = _v0.a;
+		var d1 = _v0.b;
+		return A2(
+			$elm$core$Basics$composeR,
+			A3(
+				$gampleman$elm_visualization$Scale$Continuous$bimap,
+				range,
+				_Utils_Tuple2(
+					transform(d0),
+					transform(d1)),
+				$gampleman$elm_visualization$Interpolation$float),
+			untransform);
+	});
+var $gampleman$elm_visualization$Scale$Continuous$fixPoint = F3(
+	function (maxIterations, initialInput, fn) {
+		var helper = F2(
+			function (iters, _v0) {
+				helper:
+				while (true) {
+					var a = _v0.a;
+					var b = _v0.b;
+					if (_Utils_cmp(iters + 1, maxIterations) > -1) {
+						return b;
+					} else {
+						var _v1 = fn(b);
+						var outA = _v1.a;
+						var outB = _v1.b;
+						if (_Utils_eq(outA, a)) {
+							return b;
+						} else {
+							if (!outA) {
+								return b;
+							} else {
+								var $temp$iters = iters + 1,
+									$temp$_v0 = _Utils_Tuple2(outA, outB);
+								iters = $temp$iters;
+								_v0 = $temp$_v0;
+								continue helper;
+							}
+						}
+					}
+				}
+			});
+		return A2(
+			helper,
+			1,
+			fn(initialInput));
+	});
+var $gampleman$elm_visualization$Scale$Continuous$e10 = $elm$core$Basics$sqrt(50);
+var $gampleman$elm_visualization$Scale$Continuous$e2 = $elm$core$Basics$sqrt(2);
+var $gampleman$elm_visualization$Scale$Continuous$e5 = $elm$core$Basics$sqrt(10);
+var $gampleman$elm_visualization$Scale$Continuous$ln10 = A2($elm$core$Basics$logBase, $elm$core$Basics$e, 10);
+var $gampleman$elm_visualization$Scale$Continuous$tickIncrement = F3(
+	function (start, stop, count) {
+		var step = (stop - start) / A2($elm$core$Basics$max, 0, count);
+		var powr = $elm$core$Basics$floor(
+			A2($elm$core$Basics$logBase, $elm$core$Basics$e, step) / $gampleman$elm_visualization$Scale$Continuous$ln10);
+		var error = step / A2($elm$core$Basics$pow, 10, powr);
+		var order = (_Utils_cmp(error, $gampleman$elm_visualization$Scale$Continuous$e10) > -1) ? 10 : ((_Utils_cmp(error, $gampleman$elm_visualization$Scale$Continuous$e5) > -1) ? 5 : ((_Utils_cmp(error, $gampleman$elm_visualization$Scale$Continuous$e2) > -1) ? 2 : 1));
+		return (powr >= 0) ? (order * A2($elm$core$Basics$pow, 10, powr)) : ((-A2($elm$core$Basics$pow, 10, -powr)) / order);
+	});
+var $gampleman$elm_visualization$Scale$Continuous$withNormalizedDomain = F2(
+	function (fn, _v0) {
+		var a = _v0.a;
+		var b = _v0.b;
+		if (_Utils_cmp(a, b) < 0) {
+			return fn(
+				_Utils_Tuple2(a, b));
+		} else {
+			var _v1 = fn(
+				_Utils_Tuple2(b, a));
+			var d = _v1.a;
+			var c = _v1.b;
+			return _Utils_Tuple2(c, d);
+		}
+	});
+var $gampleman$elm_visualization$Scale$Continuous$nice = F2(
+	function (domain, count) {
+		var computation = function (_v0) {
+			var start = _v0.a;
+			var stop = _v0.b;
+			var step = A3($gampleman$elm_visualization$Scale$Continuous$tickIncrement, start, stop, count);
+			return _Utils_Tuple2(
+				step,
+				(step > 0) ? _Utils_Tuple2(
+					$elm$core$Basics$floor(start / step) * step,
+					$elm$core$Basics$ceiling(stop / step) * step) : ((step < 0) ? _Utils_Tuple2(
+					$elm$core$Basics$ceiling(start * step) / step,
+					$elm$core$Basics$floor(stop * step) / step) : _Utils_Tuple2(start, stop)));
+		};
+		return A2(
+			$gampleman$elm_visualization$Scale$Continuous$withNormalizedDomain,
+			function (dmn) {
+				return A3($gampleman$elm_visualization$Scale$Continuous$fixPoint, 10, dmn, computation);
+			},
+			domain);
+	});
+var $gampleman$elm_visualization$Scale$Continuous$exponent = function (num) {
+	var helper = F2(
+		function (soFar, x) {
+			helper:
+			while (true) {
+				if (!x) {
+					return soFar;
+				} else {
+					if (x < 1) {
+						var $temp$soFar = 1 + soFar,
+							$temp$x = x * 10;
+						soFar = $temp$soFar;
+						x = $temp$x;
+						continue helper;
+					} else {
+						return soFar;
+					}
+				}
+			}
+		});
+	return A2(helper, 0, num);
+};
+var $gampleman$elm_visualization$Scale$Continuous$precisionFixed = function (step) {
+	return A2(
+		$elm$core$Basics$max,
+		0,
+		$gampleman$elm_visualization$Scale$Continuous$exponent(
+			$elm$core$Basics$abs(step)));
+};
+var $elm$core$String$cons = _String_cons;
+var $elm$core$String$fromChar = function (_char) {
+	return A2($elm$core$String$cons, _char, '');
+};
+var $elm$core$Bitwise$shiftRightBy = _Bitwise_shiftRightBy;
+var $elm$core$String$repeatHelp = F3(
+	function (n, chunk, result) {
+		return (n <= 0) ? result : A3(
+			$elm$core$String$repeatHelp,
+			n >> 1,
+			_Utils_ap(chunk, chunk),
+			(!(n & 1)) ? result : _Utils_ap(result, chunk));
+	});
+var $elm$core$String$repeat = F2(
+	function (n, chunk) {
+		return A3($elm$core$String$repeatHelp, n, chunk, '');
+	});
+var $elm$core$String$padRight = F3(
+	function (n, _char, string) {
+		return _Utils_ap(
+			string,
+			A2(
+				$elm$core$String$repeat,
+				n - $elm$core$String$length(string),
+				$elm$core$String$fromChar(_char)));
+	});
+var $gampleman$elm_visualization$Scale$Continuous$toFixed = F2(
+	function (precision, value) {
+		var power_ = A2($elm$core$Basics$pow, 10, precision);
+		var pad = function (num) {
+			_v0$2:
+			while (true) {
+				if (num.b) {
+					if (num.b.b) {
+						if (!num.b.b.b) {
+							var x = num.a;
+							var _v1 = num.b;
+							var y = _v1.a;
+							return _List_fromArray(
+								[
+									x,
+									A3(
+									$elm$core$String$padRight,
+									precision,
+									_Utils_chr('0'),
+									y)
+								]);
+						} else {
+							break _v0$2;
+						}
+					} else {
+						var val = num.a;
+						return (precision > 0) ? _List_fromArray(
+							[
+								val,
+								A3(
+								$elm$core$String$padRight,
+								precision,
+								_Utils_chr('0'),
+								'')
+							]) : _List_fromArray(
+							[val]);
+					}
+				} else {
+					break _v0$2;
+				}
+			}
+			var val = num;
+			return val;
+		};
+		return A2(
+			$elm$core$String$join,
+			'.',
+			pad(
+				A2(
+					$elm$core$String$split,
+					'.',
+					$elm$core$String$fromFloat(
+						$elm$core$Basics$round(value * power_) / power_))));
+	});
+var $gampleman$elm_visualization$Scale$Continuous$tickFormat = F2(
+	function (_v0, count) {
+		var start = _v0.a;
+		var stop = _v0.b;
+		return $gampleman$elm_visualization$Scale$Continuous$toFixed(
+			$gampleman$elm_visualization$Scale$Continuous$precisionFixed(
+				A3($gampleman$elm_visualization$Statistics$tickStep, start, stop, count)));
+	});
+var $gampleman$elm_visualization$Statistics$ticks = F3(
+	function (start, stop, count) {
+		var step = A3($gampleman$elm_visualization$Statistics$tickStep, start, stop, count);
+		var end = ($elm$core$Basics$floor(stop / step) * step) + (step / 2);
+		var beg = $elm$core$Basics$ceiling(start / step) * step;
+		return A3($gampleman$elm_visualization$Statistics$range, beg, end, step);
+	});
+var $gampleman$elm_visualization$Scale$Continuous$ticks = F2(
+	function (_v0, count) {
+		var start = _v0.a;
+		var end = _v0.b;
+		return A3($gampleman$elm_visualization$Statistics$ticks, start, end, count);
+	});
+var $gampleman$elm_visualization$Scale$Continuous$scaleWithTransform = F4(
+	function (transform, untransform, range_, domain_) {
+		return {
+			convert: A2($gampleman$elm_visualization$Scale$Continuous$convertTransform, transform, $gampleman$elm_visualization$Interpolation$float),
+			domain: domain_,
+			invert: A2($gampleman$elm_visualization$Scale$Continuous$invertTransform, transform, untransform),
+			nice: $gampleman$elm_visualization$Scale$Continuous$nice,
+			range: range_,
+			rangeExtent: F2(
+				function (_v0, r) {
+					return r;
+				}),
+			tickFormat: $gampleman$elm_visualization$Scale$Continuous$tickFormat,
+			ticks: $gampleman$elm_visualization$Scale$Continuous$ticks
+		};
+	});
+var $gampleman$elm_visualization$Scale$Continuous$linear = A2($gampleman$elm_visualization$Scale$Continuous$scaleWithTransform, $elm$core$Basics$identity, $elm$core$Basics$identity);
+var $gampleman$elm_visualization$Scale$linear = F2(
+	function (range_, domain_) {
+		return $gampleman$elm_visualization$Scale$Scale(
+			A2($gampleman$elm_visualization$Scale$Continuous$linear, range_, domain_));
+	});
+var $author$project$Widgets$Histogram$xScale = F2(
+	function (minX, maxX) {
+		return A2(
+			$gampleman$elm_visualization$Scale$linear,
+			_Utils_Tuple2(0, $author$project$Widgets$Histogram$w - (2 * $author$project$Widgets$Histogram$padding)),
+			_Utils_Tuple2(minX, maxX + 1));
+	});
 var $gampleman$elm_visualization$Axis$horizontalAttrs = {
 	horizontal: true,
 	translate: function (y) {
@@ -9567,16 +9636,6 @@ var $gampleman$elm_visualization$Axis$TickCount = function (a) {
 	return {$: 'TickCount', a: a};
 };
 var $gampleman$elm_visualization$Axis$tickCount = $gampleman$elm_visualization$Axis$TickCount;
-var $elm$core$List$maximum = function (list) {
-	if (list.b) {
-		var x = list.a;
-		var xs = list.b;
-		return $elm$core$Maybe$Just(
-			A3($elm$core$List$foldl, $elm$core$Basics$max, x, xs));
-	} else {
-		return $elm$core$Maybe$Nothing;
-	}
-};
 var $elm$core$Tuple$pair = F2(
 	function (a, b) {
 		return _Utils_Tuple2(a, b);
@@ -9609,13 +9668,22 @@ var $author$project$Widgets$Histogram$yAxis = function (bins) {
 		$author$project$Widgets$Histogram$yScaleFromBins(bins));
 };
 var $author$project$Widgets$Histogram$view = function (model) {
-	var bins = $author$project$Widgets$Histogram$histogram(
-		A2(
-			$elm$core$List$map,
-			function ($) {
-				return $.data;
-			},
-			model));
+	var data = A2(
+		$elm$core$List$map,
+		function ($) {
+			return $.data;
+		},
+		model);
+	var maxX = A2(
+		$elm$core$Maybe$withDefault,
+		20,
+		$elm$core$List$maximum(data));
+	var minX = A2(
+		$elm$core$Maybe$withDefault,
+		0,
+		$elm$core$List$minimum(data));
+	var xScaleDynamic = A2($author$project$Widgets$Histogram$xScale, minX, maxX);
+	var bins = A3($author$project$Widgets$Histogram$histogram, minX, maxX, data);
 	return A2(
 		$elm_community$typed_svg$TypedSvg$svg,
 		_List_fromArray(
@@ -9635,7 +9703,9 @@ var $author$project$Widgets$Histogram$view = function (model) {
 							]))
 					]),
 				_List_fromArray(
-					[$author$project$Widgets$Histogram$xAxis])),
+					[
+						$author$project$Widgets$Histogram$xAxis(xScaleDynamic)
+					])),
 				A2(
 				$elm_community$typed_svg$TypedSvg$g,
 				_List_fromArray(
@@ -9665,7 +9735,9 @@ var $author$project$Widgets$Histogram$view = function (model) {
 					]),
 				A2(
 					$elm$core$List$map,
-					$author$project$Widgets$Histogram$column(
+					A2(
+						$author$project$Widgets$Histogram$column,
+						xScaleDynamic,
 						$author$project$Widgets$Histogram$yScaleFromBins(bins)),
 					bins))
 			]));
@@ -9867,7 +9939,6 @@ var $folkertdev$one_true_path_experiment$LowLevel$Command$MoveTo = function (a) 
 	return {$: 'MoveTo', a: a};
 };
 var $folkertdev$one_true_path_experiment$LowLevel$Command$moveTo = $folkertdev$one_true_path_experiment$LowLevel$Command$MoveTo;
-var $elm$core$Basics$not = _Basics_not;
 var $folkertdev$one_true_path_experiment$SubPath$SubPath = function (a) {
 	return {$: 'SubPath', a: a};
 };
@@ -11591,13 +11662,13 @@ var $author$project$Page$DashboardPage$viewWidget = function (widget) {
 					$elm$html$Html$button,
 					_List_fromArray(
 						[
-							$elm$html$Html$Attributes$class('delete-widget-button'),
+							$elm$html$Html$Attributes$class('delete-button'),
 							$elm$html$Html$Events$onClick(
 							$author$project$Page$DashboardPage$DeleteWidget(pieWidget.widget_id))
 						]),
 					_List_fromArray(
 						[
-							$elm$html$Html$text('Delete')
+							$elm$html$Html$text('✖')
 						]))
 				]));
 	} else {
@@ -11615,13 +11686,13 @@ var $author$project$Page$DashboardPage$viewWidget = function (widget) {
 					$elm$html$Html$button,
 					_List_fromArray(
 						[
-							$elm$html$Html$Attributes$class('delete-widget-button'),
+							$elm$html$Html$Attributes$class('delete-button'),
 							$elm$html$Html$Events$onClick(
 							$author$project$Page$DashboardPage$DeleteWidget(histogramWidget.widget_id))
 						]),
 					_List_fromArray(
 						[
-							$elm$html$Html$text('Delete')
+							$elm$html$Html$text('✖')
 						]))
 				]));
 	}
@@ -11642,57 +11713,100 @@ var $author$project$Page$DashboardPage$viewDashboard = function (dashboard) {
 			var dashboardData = dashboard.a;
 			return A2(
 				$elm$html$Html$div,
-				_List_Nil,
 				_List_fromArray(
 					[
-						A2(
-						$elm$html$Html$h3,
-						_List_Nil,
-						_List_fromArray(
-							[
-								$elm$html$Html$text(dashboardData.title)
-							])),
-						A2(
-						$elm$html$Html$div,
-						_List_Nil,
-						A2($elm$core$List$map, $author$project$Page$DashboardPage$viewWidget, dashboardData.widgets))
-					]));
+						$elm$html$Html$Attributes$class('widget-container')
+					]),
+				A2($elm$core$List$map, $author$project$Page$DashboardPage$viewWidget, dashboardData.widgets));
 		default:
 			var httpError = dashboard.a;
 			return $author$project$Page$DashboardPage$viewFetchError(
 				$author$project$Error$buildErrorMessage(httpError));
 	}
 };
+var $elm$html$Html$h1 = _VirtualDom_node('h1');
+var $elm$html$Html$p = _VirtualDom_node('p');
+var $author$project$Page$DashboardPage$ShowAddWidgetForm = {$: 'ShowAddWidgetForm'};
+var $author$project$Page$DashboardPage$viewAddWidgetButton = A2(
+	$elm$html$Html$div,
+	_List_fromArray(
+		[
+			$elm$html$Html$Attributes$class('header-square add'),
+			$elm$html$Html$Events$onClick($author$project$Page$DashboardPage$ShowAddWidgetForm)
+		]),
+	_List_fromArray(
+		[
+			$elm$html$Html$text('+')
+		]));
 var $author$project$Page$DashboardPage$ShowEditDashboardForm = {$: 'ShowEditDashboardForm'};
 var $author$project$Page$DashboardPage$viewEditDashboardButton = A2(
 	$elm$html$Html$div,
 	_List_fromArray(
 		[
-			$elm$html$Html$Attributes$class('widget-square'),
+			$elm$html$Html$Attributes$class('header-square'),
 			$elm$html$Html$Events$onClick($author$project$Page$DashboardPage$ShowEditDashboardForm)
 		]),
 	_List_fromArray(
 		[
 			$elm$html$Html$text('Edit')
 		]));
+var $author$project$Page$DashboardPage$viewHeader = function (dashboard) {
+	return A2(
+		$elm$html$Html$div,
+		_List_fromArray(
+			[
+				$elm$html$Html$Attributes$class('widget-header')
+			]),
+		_List_fromArray(
+			[
+				A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$class('header-center')
+					]),
+				_List_fromArray(
+					[
+						A2(
+						$elm$html$Html$h1,
+						_List_Nil,
+						_List_fromArray(
+							[
+								$elm$html$Html$text(dashboard.title)
+							])),
+						A2(
+						$elm$html$Html$p,
+						_List_Nil,
+						_List_fromArray(
+							[
+								$elm$html$Html$text('Add widgets to your dashboard')
+							]))
+					])),
+				A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$class('header-left')
+					]),
+				_List_fromArray(
+					[$author$project$Page$DashboardPage$viewAddWidgetButton, $author$project$Page$DashboardPage$viewEditDashboardButton]))
+			]));
+};
 var $author$project$Page$DashboardPage$view = function (model) {
 	return A2(
 		$elm$html$Html$div,
 		_List_Nil,
 		_List_fromArray(
 			[
-				A2(
-				$elm$html$Html$h3,
-				_List_Nil,
-				_List_fromArray(
-					[
-						$elm$html$Html$text('Widgets')
-					])),
-				A2(
-				$elm$html$Html$div,
-				_List_Nil,
-				_List_fromArray(
-					[$author$project$Page$DashboardPage$viewAddWidgetButton, $author$project$Page$DashboardPage$viewEditDashboardButton])),
+				function () {
+				var _v0 = model.dashboard;
+				if (_v0.$ === 'Success') {
+					var dashboardData = _v0.a;
+					return $author$project$Page$DashboardPage$viewHeader(dashboardData);
+				} else {
+					return $elm$html$Html$text('');
+				}
+			}(),
 				model.showAddWidgetForm ? A2(
 				$elm$html$Html$map,
 				$author$project$Page$DashboardPage$WidgetFormChanged,
@@ -11707,18 +11821,6 @@ var $author$project$Page$DashboardPage$view = function (model) {
 var $author$project$Page$ListDashboards$FormChanged = function (a) {
 	return {$: 'FormChanged', a: a};
 };
-var $author$project$Page$ListDashboards$ShowForm = {$: 'ShowForm'};
-var $author$project$Page$ListDashboards$viewAddDashboardButton = A2(
-	$elm$html$Html$div,
-	_List_fromArray(
-		[
-			$elm$html$Html$Attributes$class('dashboard-square'),
-			$elm$html$Html$Events$onClick($author$project$Page$ListDashboards$ShowForm)
-		]),
-	_List_fromArray(
-		[
-			$elm$html$Html$text('+')
-		]));
 var $author$project$Page$ListDashboards$viewAddError = function (maybeError) {
 	if (maybeError.$ === 'Just') {
 		var error = maybeError.a;
@@ -11740,50 +11842,53 @@ var $author$project$Page$ListDashboards$viewAddError = function (maybeError) {
 		return $elm$html$Html$text('');
 	}
 };
-var $elm$html$Html$table = _VirtualDom_node('table');
+var $author$project$Page$ListDashboards$ShowForm = {$: 'ShowForm'};
+var $author$project$Page$ListDashboards$viewAddDashboardButton = A2(
+	$elm$html$Html$div,
+	_List_fromArray(
+		[
+			$elm$html$Html$Attributes$class('dashboard-square add'),
+			$elm$html$Html$Events$onClick($author$project$Page$ListDashboards$ShowForm)
+		]),
+	_List_fromArray(
+		[
+			$elm$html$Html$text('+')
+		]));
 var $author$project$Page$ListDashboards$DeleteDashboard = function (a) {
 	return {$: 'DeleteDashboard', a: a};
 };
 var $author$project$Page$ListDashboards$GoToDashboard = function (a) {
 	return {$: 'GoToDashboard', a: a};
 };
-var $elm$html$Html$td = _VirtualDom_node('td');
-var $elm$html$Html$tr = _VirtualDom_node('tr');
 var $author$project$Page$ListDashboards$viewDashboard = function (dashboard) {
 	return A2(
-		$elm$html$Html$tr,
-		_List_Nil,
+		$elm$html$Html$div,
 		_List_fromArray(
 			[
+				$elm$html$Html$Attributes$class('dashboard-square'),
+				$elm$html$Html$Events$onClick(
+				$author$project$Page$ListDashboards$GoToDashboard(dashboard.dashboard_id))
+			]),
+		_List_fromArray(
+			[
+				$elm$html$Html$text(dashboard.title),
 				A2(
-				$elm$html$Html$td,
+				$elm$html$Html$button,
 				_List_fromArray(
 					[
-						$elm$html$Html$Attributes$class('dashboard-square'),
-						$elm$html$Html$Events$onClick(
-						$author$project$Page$ListDashboards$GoToDashboard(dashboard.dashboard_id))
+						$elm$html$Html$Attributes$class('delete-button'),
+						$elm$html$Html$Attributes$type_('button'),
+						A2(
+						$elm$html$Html$Events$stopPropagationOn,
+						'click',
+						$elm$json$Json$Decode$succeed(
+							_Utils_Tuple2(
+								$author$project$Page$ListDashboards$DeleteDashboard(dashboard.dashboard_id),
+								true)))
 					]),
 				_List_fromArray(
 					[
-						$elm$html$Html$text(dashboard.title)
-					])),
-				A2(
-				$elm$html$Html$td,
-				_List_Nil,
-				_List_fromArray(
-					[
-						A2(
-						$elm$html$Html$button,
-						_List_fromArray(
-							[
-								$elm$html$Html$Attributes$type_('button'),
-								$elm$html$Html$Events$onClick(
-								$author$project$Page$ListDashboards$DeleteDashboard(dashboard.dashboard_id))
-							]),
-						_List_fromArray(
-							[
-								$elm$html$Html$text('Delete')
-							]))
+						$elm$html$Html$text('✖')
 					]))
 			]));
 };
@@ -11820,23 +11925,14 @@ var $author$project$Page$ListDashboards$viewDashboards = function (dashboards) {
 			var actualDashboards = dashboards.a;
 			return A2(
 				$elm$html$Html$div,
-				_List_Nil,
 				_List_fromArray(
 					[
-						A2(
-						$elm$html$Html$h3,
-						_List_Nil,
-						_List_fromArray(
-							[
-								$elm$html$Html$text('Dashboards')
-							])),
-						A2(
-						$elm$html$Html$table,
-						_List_Nil,
-						_Utils_ap(
-							_List_Nil,
-							A2($elm$core$List$map, $author$project$Page$ListDashboards$viewDashboard, actualDashboards)))
-					]));
+						$elm$html$Html$Attributes$class('dashboard-container')
+					]),
+				A2(
+					$elm$core$List$cons,
+					$author$project$Page$ListDashboards$viewAddDashboardButton,
+					A2($elm$core$List$map, $author$project$Page$ListDashboards$viewDashboard, actualDashboards)));
 		default:
 			var httpError = dashboards.a;
 			return $author$project$Page$ListDashboards$viewFetchError(
@@ -11864,14 +11960,37 @@ var $author$project$Page$ListDashboards$viewDeleteError = function (maybeError) 
 		return $elm$html$Html$text('');
 	}
 };
+var $author$project$Page$ListDashboards$viewHeader = A2(
+	$elm$html$Html$div,
+	_List_fromArray(
+		[
+			$elm$html$Html$Attributes$class('dashboard-header')
+		]),
+	_List_fromArray(
+		[
+			A2(
+			$elm$html$Html$h1,
+			_List_Nil,
+			_List_fromArray(
+				[
+					$elm$html$Html$text('Dashboards')
+				])),
+			A2(
+			$elm$html$Html$p,
+			_List_Nil,
+			_List_fromArray(
+				[
+					$elm$html$Html$text('Manage your dashboards below. Click \'+\' to add a new dashboard.')
+				]))
+		]));
 var $author$project$Page$ListDashboards$view = function (model) {
 	return A2(
 		$elm$html$Html$div,
 		_List_Nil,
 		_List_fromArray(
 			[
+				$author$project$Page$ListDashboards$viewHeader,
 				$author$project$Page$ListDashboards$viewDashboards(model.dashboards),
-				$author$project$Page$ListDashboards$viewAddDashboardButton,
 				model.showAddDashboardForm ? A2(
 				$elm$html$Html$map,
 				$author$project$Page$ListDashboards$FormChanged,

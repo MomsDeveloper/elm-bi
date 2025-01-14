@@ -146,11 +146,12 @@ update msg model =
 view : Model -> Html Msg
 view model =
     div []
-        [ h3 [] [ text "Widgets" ]
-        , div []
-            [ viewAddWidgetButton
-            , viewEditDashboardButton
-            ]
+        [ case model.dashboard of
+            RemoteData.Success dashboardData ->
+                viewHeader dashboardData
+
+            _ ->
+                text ""
         , if model.showAddWidgetForm then
             Html.map WidgetFormChanged (AddWidgetForm.view model.addWidgetForm)
 
@@ -165,10 +166,24 @@ view model =
         ]
 
 
+viewHeader : Dashboard -> Html Msg
+viewHeader dashboard =
+    div [ class "widget-header" ]
+        [ div [ class "header-center" ]
+            [ h1 [] [ text dashboard.title ]
+            , p [] [ text "Add widgets to your dashboard" ]
+            ]
+        , div [ class "header-left" ]
+            [ viewAddWidgetButton
+            , viewEditDashboardButton
+            ]
+        ]
+
+
 viewAddWidgetButton : Html Msg
 viewAddWidgetButton =
     div
-        [ class "widget-square"
+        [ class "header-square add"
         , onClick ShowAddWidgetForm
         ]
         [ text "+" ]
@@ -177,7 +192,7 @@ viewAddWidgetButton =
 viewEditDashboardButton : Html Msg
 viewEditDashboardButton =
     div
-        [ class "widget-square"
+        [ class "header-square"
         , onClick ShowEditDashboardForm
         ]
         [ text "Edit" ]
@@ -193,11 +208,8 @@ viewDashboard dashboard =
             h3 [] [ text "Loading Dashboard..." ]
 
         RemoteData.Success dashboardData ->
-            div []
-                [ h3 [] [ text dashboardData.title ]
-                , div []
-                    (List.map viewWidget dashboardData.widgets)
-                ]
+            div [ class "widget-container" ]
+                (List.map viewWidget dashboardData.widgets)
 
         RemoteData.Failure httpError ->
             viewFetchError (buildErrorMessage httpError)
@@ -209,13 +221,13 @@ viewWidget widget =
         Pie pieWidget ->
             div [ class "widget-square" ]
                 [ Widgets.PieChart.view pieWidget.data
-                , button [ class "delete-widget-button", onClick (DeleteWidget pieWidget.widget_id) ] [ text "Delete" ]
+                , button [ class "delete-button", onClick (DeleteWidget pieWidget.widget_id) ] [ text "✖" ]
                 ]
 
         Histogram histogramWidget ->
             div [ class "widget-square" ]
                 [ Widgets.Histogram.view histogramWidget.data
-                , button [ class "delete-widget-button", onClick (DeleteWidget histogramWidget.widget_id) ] [ text "Delete" ]
+                , button [ class "delete-button", onClick (DeleteWidget histogramWidget.widget_id) ] [ text "✖" ]
                 ]
 
 

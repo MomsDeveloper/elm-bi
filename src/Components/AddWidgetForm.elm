@@ -13,6 +13,7 @@ type alias Model =
     , selectedTable : Table
     , tables : List Table
     , isWidgetTypeSelected : Bool
+    , errorMessage : Maybe String
     }
 
 
@@ -22,6 +23,7 @@ type Msg
     | ColumnToggled String
     | Cancel
     | AddNewWidget
+    | DisplayError String
 
 
 init : List Table -> Model
@@ -30,6 +32,7 @@ init tables =
     , selectedTable = Table "" []
     , tables = tables
     , isWidgetTypeSelected = False
+    , errorMessage = Nothing
     }
 
 
@@ -54,6 +57,9 @@ update msg model =
 
         AddNewWidget ->
             model
+
+        DisplayError error ->
+            { model | errorMessage = Just error }
 
 
 updateTableSelection : String -> Model -> Model
@@ -112,20 +118,26 @@ emptyWidget widgetType =
 
 view : Model -> Html Msg
 view model =
-    div [ class "add-widget form" ]
+    div [ class "form" ]
         [ h3 [] [ text "Add Widget" ]
         , div [ class "form-content" ]
             [ div [ class "form-group" ]
                 [ select
-                    [ class "table-dropdown", onInput WidgetTypeSelected ]
-                    [ option [ value "PieChart" ] [ text "Pie Chart" ]
+                    [ onInput WidgetTypeSelected ]
+                    [ if not model.isWidgetTypeSelected then
+                        option [ value "PieChart" ] [ text "Choose a widget" ]
+
+                      else
+                        text ""
+                    , option [ value "PieChart" ] [ text "Pie Chart" ]
                     , option [ value "Histogram" ] [ text "Histogram" ]
                     ]
                 ]
             , if model.isWidgetTypeSelected then
                 div [ class "form-group" ]
-                    [ select
-                        [ class "table-dropdown", onInput TableSelected ]
+                    [ div [] [ text "Select table:" ]
+                    , select
+                        [ onInput TableSelected ]
                         (List.map (\table -> option [ value table.name ] [ text table.name ]) model.tables)
                     , div [] [ text "Select columns:" ]
                     , viewTableColumns model.selectedTable
@@ -133,15 +145,25 @@ view model =
 
               else
                 text ""
-            , button [ class "add-widget-button", onClick AddNewWidget ] [ text "Add Widget" ]
-            , button [ class "cancel-button", onClick Cancel ] [ text "Cancel" ]
+            , div [ class "form-buttons" ]
+                [ button [ onClick Cancel ] [ text "Cancel" ]
+                , if model.isWidgetTypeSelected then
+                    button [ onClick AddNewWidget ] [ text "Add Widget" ]
+
+                  else
+                    button [ onClick (DisplayError "Please select a widget") ] [ text "Add Widget" ]
+                ]
             ]
+        , case model.errorMessage of
+            Just error ->
+                div [ class "error" ] [ text error ]
+
+            Nothing ->
+                text ""
         ]
 
 
 viewTableColumns : Table -> Html Msg
 viewTableColumns table =
-    div []
-        [ select [ class "table-dropdown", onInput ColumnToggled ]
-            (List.map (\col -> option [ value col.name ] [ text col.name ]) table.columns)
-        ]
+    select [ onInput ColumnToggled ]
+        (List.map (\col -> option [ value col.name ] [ text col.name ]) table.columns)
