@@ -21,12 +21,12 @@ jobs:
         with:
           node-version: '16.x'
 
-      - name: Install Elm and tools
+      - name: Navigate to frontend and install dependencies
+        working-directory: ./frontend
         run: |
           npm install
 
       - name: Run Elm Format
+        working-directory: ./frontend
         run: |
           npx elm-format src --yes
-
-        
