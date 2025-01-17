@@ -1,7 +1,7 @@
 module Components.AddWidgetForm exposing (Model, Msg(..), init, update, view)
 
-import Html exposing (Html, button, div, h3, option, select, text)
-import Html.Attributes exposing (class, value)
+import Html exposing (Html, button, div, h3, input, option, select, text)
+import Html.Attributes exposing (class, disabled, type_, value)
 import Html.Events exposing (onClick, onInput)
 import List.Extra
 import Models.DataSource exposing (Table)
@@ -13,26 +13,29 @@ type alias Model =
     , selectedTable : Table
     , tables : List Table
     , isWidgetTypeSelected : Bool
-    , errorMessage : Maybe String
     }
 
 
 type Msg
     = TableSelected String
     | WidgetTypeSelected String
+    | WidgetTitleChanged String
     | ColumnToggled String
     | Cancel
     | AddNewWidget
-    | DisplayError String
 
 
 init : List Table -> Model
 init tables =
-    { widget = emptyWidget ""
-    , selectedTable = Table "" []
+    initialModel tables
+
+
+initialModel : List Table -> Model
+initialModel tables =
+    { widget = emptyWidget (List.head tables |> Maybe.withDefault (Table "" []))
+    , selectedTable = List.head tables |> Maybe.withDefault (Table "" [])
     , tables = tables
     , isWidgetTypeSelected = False
-    , errorMessage = Nothing
     }
 
 
@@ -40,7 +43,7 @@ update : Msg -> Model -> Model
 update msg model =
     case msg of
         Cancel ->
-            clearForm model
+            initialModel model.tables
 
         TableSelected tableName ->
             updateTableSelection tableName model
@@ -50,16 +53,25 @@ update msg model =
 
         WidgetTypeSelected widgetType ->
             let
-                selectedTable =
-                    List.head model.tables |> Maybe.withDefault (Table "" [])
+                widget =
+                    model.widget
             in
-            { model | widget = emptyWidget widgetType, isWidgetTypeSelected = True, selectedTable = selectedTable }
+            { model | widget = updateWidgetType widgetType widget, isWidgetTypeSelected = True }
+
+        WidgetTitleChanged title ->
+            let
+                updatedWidget =
+                    case model.widget of
+                        Pie data ->
+                            Pie { data | title = title }
+
+                        Histogram data ->
+                            Histogram { data | title = title }
+            in
+            { model | widget = updatedWidget }
 
         AddNewWidget ->
             model
-
-        DisplayError error ->
-            { model | errorMessage = Just error }
 
 
 updateTableSelection : String -> Model -> Model
@@ -84,6 +96,32 @@ updateTableSelection tableName model =
             model
 
 
+updateWidgetType : String -> Widget -> Widget
+updateWidgetType widgetType widget =
+    case widget of
+        Pie { title, table, data_column } ->
+            case widgetType of
+                "PieChart" ->
+                    Pie { widget_id = 0, title = title, table = table, data_column = data_column, data = [] }
+
+                "Histogram" ->
+                    Histogram { widget_id = 0, title = title, table = table, data_column = data_column, data = [] }
+
+                _ ->
+                    Pie { widget_id = 0, title = title, table = table, data_column = data_column, data = [] }
+
+        Histogram { title, table, data_column } ->
+            case widgetType of
+                "PieChart" ->
+                    Pie { widget_id = 0, title = title, table = table, data_column = data_column, data = [] }
+
+                "Histogram" ->
+                    Histogram { widget_id = 0, title = title, table = table, data_column = data_column, data = [] }
+
+                _ ->
+                    Pie { widget_id = 0, title = title, table = table, data_column = data_column, data = [] }
+
+
 toggleColumn : String -> Model -> Model
 toggleColumn columnName model =
     let
@@ -98,22 +136,13 @@ toggleColumn columnName model =
     { model | widget = updatedWidget }
 
 
-clearForm : Model -> Model
-clearForm model =
-    { model | widget = emptyWidget "", selectedTable = Table "" [], isWidgetTypeSelected = False, errorMessage = Nothing }
-
-
-emptyWidget : String -> Widget
-emptyWidget widgetType =
-    case widgetType of
-        "PieChart" ->
-            Pie { widget_id = 0, title = "", table = "", data_column = "", data = [] }
-
-        "Histogram" ->
-            Histogram { widget_id = 0, title = "", table = "", data_column = "", data = [] }
-
-        _ ->
-            Pie { widget_id = 0, title = "", table = "", data_column = "", data = [] }
+emptyWidget : Table -> Widget
+emptyWidget table =
+    let
+        tableColumn =
+            table.columns |> List.head |> Maybe.map .name |> Maybe.withDefault ""
+    in
+    Pie { widget_id = 0, title = "", table = table.name, data_column = tableColumn, data = [] }
 
 
 view : Model -> Html Msg
@@ -122,6 +151,14 @@ view model =
         [ h3 [] [ text "Add Widget" ]
         , div [ class "form-content" ]
             [ div [ class "form-group" ]
+                [ div [] [ text "Your widget title:" ]
+                , input
+                    [ type_ "text"
+                    , onInput WidgetTitleChanged
+                    ]
+                    []
+                ]
+            , div [ class "form-group" ]
                 [ select
                     [ onInput WidgetTypeSelected ]
                     [ if not model.isWidgetTypeSelected then
@@ -147,19 +184,13 @@ view model =
                 text ""
             , div [ class "form-buttons" ]
                 [ button [ onClick Cancel ] [ text "Cancel" ]
-                , if model.isWidgetTypeSelected then
+                , if checkIfValid model then
                     button [ onClick AddNewWidget ] [ text "Add Widget" ]
 
                   else
-                    button [ onClick (DisplayError "Please select a widget") ] [ text "Add Widget" ]
+                    button [ disabled True ] [ text "Add Widget" ]
                 ]
             ]
-        , case model.errorMessage of
-            Just error ->
-                div [ class "error" ] [ text error ]
-
-            Nothing ->
-                text ""
         ]
 
 
@@ -167,3 +198,17 @@ viewTableColumns : Table -> Html Msg
 viewTableColumns table =
     select [ onInput ColumnToggled ]
         (List.map (\col -> option [ value col.name ] [ text col.name ]) table.columns)
+
+
+checkIfValid : Model -> Bool
+checkIfValid model =
+    let
+        title =
+            case model.widget of
+                Pie data ->
+                    data.title
+
+                Histogram data ->
+                    data.title
+    in
+    String.length title < 10 && title /= "" && model.isWidgetTypeSelected

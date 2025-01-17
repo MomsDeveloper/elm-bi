@@ -6407,27 +6407,64 @@ var $author$project$Components$AddDashboardForm$emptyDashboard = {
 	widgets: _List_Nil
 };
 var $author$project$Components$AddDashboardForm$init = {dashboard: $author$project$Components$AddDashboardForm$emptyDashboard};
-var $author$project$Components$AddWidgetForm$emptyWidget = function (widgetType) {
-	switch (widgetType) {
-		case 'PieChart':
-			return $author$project$Models$Widgets$Pie(
-				{data: _List_Nil, data_column: '', table: '', title: '', widget_id: 0});
-		case 'Histogram':
-			return $author$project$Models$Widgets$Histogram(
-				{data: _List_Nil, data_column: '', table: '', title: '', widget_id: 0});
-		default:
-			return $author$project$Models$Widgets$Pie(
-				{data: _List_Nil, data_column: '', table: '', title: '', widget_id: 0});
+var $elm$core$List$head = function (list) {
+	if (list.b) {
+		var x = list.a;
+		var xs = list.b;
+		return $elm$core$Maybe$Just(x);
+	} else {
+		return $elm$core$Maybe$Nothing;
 	}
 };
-var $author$project$Components$AddWidgetForm$init = function (tables) {
+var $elm$core$Maybe$map = F2(
+	function (f, maybe) {
+		if (maybe.$ === 'Just') {
+			var value = maybe.a;
+			return $elm$core$Maybe$Just(
+				f(value));
+		} else {
+			return $elm$core$Maybe$Nothing;
+		}
+	});
+var $elm$core$Maybe$withDefault = F2(
+	function (_default, maybe) {
+		if (maybe.$ === 'Just') {
+			var value = maybe.a;
+			return value;
+		} else {
+			return _default;
+		}
+	});
+var $author$project$Components$AddWidgetForm$emptyWidget = function (table) {
+	var tableColumn = A2(
+		$elm$core$Maybe$withDefault,
+		'',
+		A2(
+			$elm$core$Maybe$map,
+			function ($) {
+				return $.name;
+			},
+			$elm$core$List$head(table.columns)));
+	return $author$project$Models$Widgets$Pie(
+		{data: _List_Nil, data_column: tableColumn, table: table.name, title: '', widget_id: 0});
+};
+var $author$project$Components$AddWidgetForm$initialModel = function (tables) {
 	return {
-		errorMessage: $elm$core$Maybe$Nothing,
 		isWidgetTypeSelected: false,
-		selectedTable: A2($author$project$Models$DataSource$Table, '', _List_Nil),
+		selectedTable: A2(
+			$elm$core$Maybe$withDefault,
+			A2($author$project$Models$DataSource$Table, '', _List_Nil),
+			$elm$core$List$head(tables)),
 		tables: tables,
-		widget: $author$project$Components$AddWidgetForm$emptyWidget('')
+		widget: $author$project$Components$AddWidgetForm$emptyWidget(
+			A2(
+				$elm$core$Maybe$withDefault,
+				A2($author$project$Models$DataSource$Table, '', _List_Nil),
+				$elm$core$List$head(tables)))
 	};
+};
+var $author$project$Components$AddWidgetForm$init = function (tables) {
+	return $author$project$Components$AddWidgetForm$initialModel(tables);
 };
 var $author$project$Page$DashboardPage$initialModel = function (navKey) {
 	return {
@@ -6560,16 +6597,6 @@ var $elm$url$Url$Parser$custom = F2(
 					}
 				}
 			});
-	});
-var $elm$core$Maybe$map = F2(
-	function (f, maybe) {
-		if (maybe.$ === 'Just') {
-			var value = maybe.a;
-			return $elm$core$Maybe$Just(
-				f(value));
-		} else {
-			return $elm$core$Maybe$Nothing;
-		}
 	});
 var $author$project$Models$Dashboard$idParser = A2(
 	$elm$url$Url$Parser$custom,
@@ -7108,25 +7135,6 @@ var $author$project$Components$AddDashboardForm$update = F2(
 				return model;
 		}
 	});
-var $author$project$Components$AddWidgetForm$clearForm = function (model) {
-	return _Utils_update(
-		model,
-		{
-			errorMessage: $elm$core$Maybe$Nothing,
-			isWidgetTypeSelected: false,
-			selectedTable: A2($author$project$Models$DataSource$Table, '', _List_Nil),
-			widget: $author$project$Components$AddWidgetForm$emptyWidget('')
-		});
-};
-var $elm$core$List$head = function (list) {
-	if (list.b) {
-		var x = list.a;
-		var xs = list.b;
-		return $elm$core$Maybe$Just(x);
-	} else {
-		return $elm$core$Maybe$Nothing;
-	}
-};
 var $author$project$Components$AddWidgetForm$toggleColumn = F2(
 	function (columnName, model) {
 		var updatedWidget = function () {
@@ -7203,20 +7211,45 @@ var $author$project$Components$AddWidgetForm$updateTableSelection = F2(
 			return model;
 		}
 	});
-var $elm$core$Maybe$withDefault = F2(
-	function (_default, maybe) {
-		if (maybe.$ === 'Just') {
-			var value = maybe.a;
-			return value;
+var $author$project$Components$AddWidgetForm$updateWidgetType = F2(
+	function (widgetType, widget) {
+		if (widget.$ === 'Pie') {
+			var title = widget.a.title;
+			var table = widget.a.table;
+			var data_column = widget.a.data_column;
+			switch (widgetType) {
+				case 'PieChart':
+					return $author$project$Models$Widgets$Pie(
+						{data: _List_Nil, data_column: data_column, table: table, title: title, widget_id: 0});
+				case 'Histogram':
+					return $author$project$Models$Widgets$Histogram(
+						{data: _List_Nil, data_column: data_column, table: table, title: title, widget_id: 0});
+				default:
+					return $author$project$Models$Widgets$Pie(
+						{data: _List_Nil, data_column: data_column, table: table, title: title, widget_id: 0});
+			}
 		} else {
-			return _default;
+			var title = widget.a.title;
+			var table = widget.a.table;
+			var data_column = widget.a.data_column;
+			switch (widgetType) {
+				case 'PieChart':
+					return $author$project$Models$Widgets$Pie(
+						{data: _List_Nil, data_column: data_column, table: table, title: title, widget_id: 0});
+				case 'Histogram':
+					return $author$project$Models$Widgets$Histogram(
+						{data: _List_Nil, data_column: data_column, table: table, title: title, widget_id: 0});
+				default:
+					return $author$project$Models$Widgets$Pie(
+						{data: _List_Nil, data_column: data_column, table: table, title: title, widget_id: 0});
+			}
 		}
 	});
 var $author$project$Components$AddWidgetForm$update = F2(
 	function (msg, model) {
 		switch (msg.$) {
 			case 'Cancel':
-				return $author$project$Components$AddWidgetForm$clearForm(model);
+				return $author$project$Components$AddWidgetForm$initialModel(model.tables);
 			case 'TableSelected':
 				var tableName = msg.a;
 				return A2($author$project$Components$AddWidgetForm$updateTableSelection, tableName, model);
@@ -7225,26 +7258,36 @@ var $author$project$Components$AddWidgetForm$update = F2(
 				return A2($author$project$Components$AddWidgetForm$toggleColumn, columnName, model);
 			case 'WidgetTypeSelected':
 				var widgetType = msg.a;
-				var selectedTable = A2(
-					$elm$core$Maybe$withDefault,
-					A2($author$project$Models$DataSource$Table, '', _List_Nil),
-					$elm$core$List$head(model.tables));
+				var widget = model.widget;
 				return _Utils_update(
 					model,
 					{
 						isWidgetTypeSelected: true,
-						selectedTable: selectedTable,
-						widget: $author$project$Components$AddWidgetForm$emptyWidget(widgetType)
+						widget: A2($author$project$Components$AddWidgetForm$updateWidgetType, widgetType, widget)
 					});
-			case 'AddNewWidget':
-				return model;
-			default:
-				var error = msg.a;
+			case 'WidgetTitleChanged':
+				var title = msg.a;
+				var updatedWidget = function () {
+					var _v1 = model.widget;
+					if (_v1.$ === 'Pie') {
+						var data = _v1.a;
+						return $author$project$Models$Widgets$Pie(
+							_Utils_update(
+								data,
+								{title: title}));
+					} else {
+						var data = _v1.a;
+						return $author$project$Models$Widgets$Histogram(
+							_Utils_update(
+								data,
+								{title: title}));
+					}
+				}();
 				return _Utils_update(
 					model,
-					{
-						errorMessage: $elm$core$Maybe$Just(error)
-					});
+					{widget: updatedWidget});
+			default:
+				return model;
 		}
 	});
 var $author$project$Models$DataSource$tableColumnEncoder = function (tableColumn) {
@@ -7705,6 +7748,11 @@ var $author$project$Components$AddDashboardForm$UpdateUsername = function (a) {
 	return {$: 'UpdateUsername', a: a};
 };
 var $elm$html$Html$button = _VirtualDom_node('button');
+var $elm$core$Basics$neq = _Utils_notEqual;
+var $author$project$Components$AddDashboardForm$checkIfValid = function (model) {
+	var isValid = (model.dashboard.title !== '') && ((model.dashboard.dataSource.host !== '') && ((!(!model.dashboard.dataSource.portNumber)) && ((model.dashboard.dataSource.username !== '') && ((model.dashboard.dataSource.password !== '') && (model.dashboard.dataSource.database !== '')))));
+	return isValid;
+};
 var $elm$html$Html$Attributes$stringProperty = F2(
 	function (key, string) {
 		return A2(
@@ -7713,6 +7761,15 @@ var $elm$html$Html$Attributes$stringProperty = F2(
 			$elm$json$Json$Encode$string(string));
 	});
 var $elm$html$Html$Attributes$class = $elm$html$Html$Attributes$stringProperty('className');
+var $elm$json$Json$Encode$bool = _Json_wrap;
+var $elm$html$Html$Attributes$boolProperty = F2(
+	function (key, bool) {
+		return A2(
+			_VirtualDom_property,
+			key,
+			$elm$json$Json$Encode$bool(bool));
+	});
+var $elm$html$Html$Attributes$disabled = $elm$html$Html$Attributes$boolProperty('disabled');
 var $elm$html$Html$input = _VirtualDom_node('input');
 var $elm$html$Html$label = _VirtualDom_node('label');
 var $elm$virtual_dom$VirtualDom$Normal = function (a) {
@@ -7765,7 +7822,8 @@ var $elm$html$Html$Events$onInput = function (tagger) {
 };
 var $elm$html$Html$Attributes$type_ = $elm$html$Html$Attributes$stringProperty('type');
 var $elm$html$Html$Attributes$value = $elm$html$Html$Attributes$stringProperty('value');
-var $author$project$Components$AddDashboardForm$view = function (dashboard) {
+var $author$project$Components$AddDashboardForm$view = function (model) {
+	var dashboard = model.dashboard;
 	return A2(
 		$elm$html$Html$div,
 		_List_fromArray(
@@ -7958,7 +8016,7 @@ var $author$project$Components$AddDashboardForm$view = function (dashboard) {
 									[
 										$elm$html$Html$text('Cancel')
 									])),
-								A2(
+								$author$project$Components$AddDashboardForm$checkIfValid(model) ? A2(
 								$elm$html$Html$button,
 								_List_fromArray(
 									[
@@ -7966,7 +8024,16 @@ var $author$project$Components$AddDashboardForm$view = function (dashboard) {
 									]),
 								_List_fromArray(
 									[
-										$elm$html$Html$text('Create')
+										$elm$html$Html$text('Add')
+									])) : A2(
+								$elm$html$Html$button,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$disabled(true)
+									]),
+								_List_fromArray(
+									[
+										$elm$html$Html$text('Add')
 									]))
 							]))
 					]))
@@ -7974,14 +8041,27 @@ var $author$project$Components$AddDashboardForm$view = function (dashboard) {
 };
 var $author$project$Components$AddWidgetForm$AddNewWidget = {$: 'AddNewWidget'};
 var $author$project$Components$AddWidgetForm$Cancel = {$: 'Cancel'};
-var $author$project$Components$AddWidgetForm$DisplayError = function (a) {
-	return {$: 'DisplayError', a: a};
-};
 var $author$project$Components$AddWidgetForm$TableSelected = function (a) {
 	return {$: 'TableSelected', a: a};
 };
+var $author$project$Components$AddWidgetForm$WidgetTitleChanged = function (a) {
+	return {$: 'WidgetTitleChanged', a: a};
+};
 var $author$project$Components$AddWidgetForm$WidgetTypeSelected = function (a) {
 	return {$: 'WidgetTypeSelected', a: a};
+};
+var $author$project$Components$AddWidgetForm$checkIfValid = function (model) {
+	var title = function () {
+		var _v0 = model.widget;
+		if (_v0.$ === 'Pie') {
+			var data = _v0.a;
+			return data.title;
+		} else {
+			var data = _v0.a;
+			return data.title;
+		}
+	}();
+	return ($elm$core$String$length(title) < 10) && ((title !== '') && model.isWidgetTypeSelected);
 };
 var $elm$core$Basics$not = _Basics_not;
 var $elm$html$Html$option = _VirtualDom_node('option');
@@ -8036,6 +8116,30 @@ var $author$project$Components$AddWidgetForm$view = function (model) {
 					]),
 				_List_fromArray(
 					[
+						A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('form-group')
+							]),
+						_List_fromArray(
+							[
+								A2(
+								$elm$html$Html$div,
+								_List_Nil,
+								_List_fromArray(
+									[
+										$elm$html$Html$text('Your widget title:')
+									])),
+								A2(
+								$elm$html$Html$input,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$type_('text'),
+										$elm$html$Html$Events$onInput($author$project$Components$AddWidgetForm$WidgetTitleChanged)
+									]),
+								_List_Nil)
+							])),
 						A2(
 						$elm$html$Html$div,
 						_List_fromArray(
@@ -8147,7 +8251,7 @@ var $author$project$Components$AddWidgetForm$view = function (model) {
 									[
 										$elm$html$Html$text('Cancel')
 									])),
-								model.isWidgetTypeSelected ? A2(
+								$author$project$Components$AddWidgetForm$checkIfValid(model) ? A2(
 								$elm$html$Html$button,
 								_List_fromArray(
 									[
@@ -8160,33 +8264,14 @@ var $author$project$Components$AddWidgetForm$view = function (model) {
 								$elm$html$Html$button,
 								_List_fromArray(
 									[
-										$elm$html$Html$Events$onClick(
-										$author$project$Components$AddWidgetForm$DisplayError('Please select a widget'))
+										$elm$html$Html$Attributes$disabled(true)
 									]),
 								_List_fromArray(
 									[
 										$elm$html$Html$text('Add Widget')
 									]))
 							]))
-					])),
-				function () {
-				var _v0 = model.errorMessage;
-				if (_v0.$ === 'Just') {
-					var error = _v0.a;
-					return A2(
-						$elm$html$Html$div,
-						_List_fromArray(
-							[
-								$elm$html$Html$Attributes$class('error')
-							]),
-						_List_fromArray(
-							[
-								$elm$html$Html$text(error)
-							]));
-				} else {
-					return $elm$html$Html$text('');
-				}
-			}()
+					]))
 			]));
 };
 var $author$project$Page$DashboardPage$viewFetchError = function (errorMessage) {
@@ -11664,6 +11749,16 @@ var $author$project$Page$DashboardPage$viewWidget = function (widget) {
 					_List_fromArray(
 						[
 							$elm$html$Html$text('✖')
+						])),
+					A2(
+					$elm$html$Html$div,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('widget-title')
+						]),
+					_List_fromArray(
+						[
+							$elm$html$Html$text(pieWidget.title)
 						]))
 				]));
 	} else {
@@ -11688,6 +11783,16 @@ var $author$project$Page$DashboardPage$viewWidget = function (widget) {
 					_List_fromArray(
 						[
 							$elm$html$Html$text('✖')
+						])),
+					A2(
+					$elm$html$Html$div,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('widget-title')
+						]),
+					_List_fromArray(
+						[
+							$elm$html$Html$text(histogramWidget.title)
 						]))
 				]));
 	}
@@ -11809,7 +11914,7 @@ var $author$project$Page$DashboardPage$view = function (model) {
 				model.showEditDashboardForm ? A2(
 				$elm$html$Html$map,
 				$author$project$Page$DashboardPage$DashboardFormChanged,
-				$author$project$Components$AddDashboardForm$view(model.editDashboardForm.dashboard)) : $elm$html$Html$text(''),
+				$author$project$Components$AddDashboardForm$view(model.editDashboardForm)) : $elm$html$Html$text(''),
 				$author$project$Page$DashboardPage$viewDashboard(model.dashboard)
 			]));
 };
@@ -11989,7 +12094,7 @@ var $author$project$Page$ListDashboards$view = function (model) {
 				model.showAddDashboardForm ? A2(
 				$elm$html$Html$map,
 				$author$project$Page$ListDashboards$FormChanged,
-				$author$project$Components$AddDashboardForm$view(model.addDashboardForm.dashboard)) : $elm$html$Html$text(''),
+				$author$project$Components$AddDashboardForm$view(model.addDashboardForm)) : $elm$html$Html$text(''),
 				$author$project$Page$ListDashboards$viewDeleteError(model.deleteError),
 				$author$project$Page$ListDashboards$viewAddError(model.createError)
 			]));
