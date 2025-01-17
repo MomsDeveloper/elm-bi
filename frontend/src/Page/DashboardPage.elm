@@ -9,6 +9,7 @@ import Html.Attributes exposing (class)
 import Html.Events exposing (onClick)
 import Http
 import Json.Encode
+import Config exposing (apiUrl)
 import Models.Dashboard as Dashboard exposing (Dashboard, DashboardId, dashboardDecoder, dashboardEncoder)
 import Models.Widgets exposing (Widget(..), widgetEncoder)
 import RemoteData exposing (WebData)
@@ -248,7 +249,7 @@ viewFetchError errorMessage =
 getDashboard : DashboardId -> Cmd Msg
 getDashboard dashboardId =
     Http.post
-        { url = "http://127.0.0.1:6969/get-dashboard"
+        { url = apiUrl ++ "/get-dashboard"
         , body =
             Http.jsonBody
                 (Json.Encode.object [ ( "dashboard_id", Dashboard.idEncoder dashboardId ) ])
@@ -259,7 +260,7 @@ getDashboard dashboardId =
 addWidget : Widget -> DashboardId -> Cmd Msg
 addWidget widget dashboardId =
     Http.post
-        { url = "http://127.0.0.1:6969/add-widget"
+        { url = apiUrl ++ "/add-widget"
         , body =
             Http.jsonBody
                 (Json.Encode.object [ ( "dashboard_id", Dashboard.idEncoder dashboardId ), ( "widget", widgetEncoder widget ) ])
@@ -270,7 +271,7 @@ addWidget widget dashboardId =
 deleteWidget : DashboardId -> Int -> Cmd Msg
 deleteWidget dashboardId widgetId =
     Http.post
-        { url = "http://127.0.0.1:6969/delete-widget"
+        { url = apiUrl ++ "/delete-widget"
         , body =
             Http.jsonBody
                 (Json.Encode.object [ ( "dashboard_id", Dashboard.idEncoder dashboardId ), ( "widget_id", Json.Encode.int widgetId ) ])
@@ -281,7 +282,7 @@ deleteWidget dashboardId widgetId =
 updateDashboard : Dashboard -> Cmd Msg
 updateDashboard dashboard =
     Http.post
-        { url = "http://127.0.0.1:6969/update-dashboard"
+        { url = apiUrl ++ "/update-dashboard"
         , body =
             Http.jsonBody
                 (dashboardEncoder dashboard)
