@@ -1,7 +1,7 @@
 module Components.AddDashboardForm exposing (Model, Msg(..), emptyDashboard, init, update, view)
 
 import Html exposing (Html, button, div, input, label, text)
-import Html.Attributes exposing (class, type_, value)
+import Html.Attributes exposing (class, disabled, type_, value)
 import Html.Events exposing (onClick, onInput)
 import Models.Dashboard exposing (Dashboard)
 
@@ -128,8 +128,12 @@ update msg model =
             model
 
 
-view : Dashboard -> Html Msg
-view dashboard =
+view : Model -> Html Msg
+view model =
+    let
+        dashboard =
+            model.dashboard
+    in
     div [ class "form" ]
         [ div [ class "form-content" ]
             [ div [ class "form-group" ]
@@ -188,10 +192,34 @@ view dashboard =
                 ]
             , div [ class "form-buttons" ]
                 [ button [ onClick Cancel ] [ text "Cancel" ]
-                , button [ onClick AddNewDashboard ] [ text "Create" ]
+                , if checkIfValid model then
+                    button [ onClick AddNewDashboard ] [ text "Add" ]
+
+                  else
+                    button [ disabled True ] [ text "Add" ]
                 ]
             ]
         ]
+
+
+checkIfValid : Model -> Bool
+checkIfValid model =
+    let
+        isValid =
+            model.dashboard.title
+                /= ""
+                && model.dashboard.dataSource.host
+                /= ""
+                && model.dashboard.dataSource.portNumber
+                /= 0
+                && model.dashboard.dataSource.username
+                /= ""
+                && model.dashboard.dataSource.password
+                /= ""
+                && model.dashboard.dataSource.database
+                /= ""
+    in
+    isValid
 
 
 emptyDashboard : Dashboard

@@ -76,6 +76,7 @@ update msg model =
         ShowAddWidgetForm ->
             ( { model | showAddWidgetForm = True }, Cmd.none )
 
+        -- ( { model | showAddWidgetForm = True },
         ShowEditDashboardForm ->
             let
                 currentDashboard =
@@ -158,7 +159,7 @@ view model =
           else
             text ""
         , if model.showEditDashboardForm then
-            Html.map DashboardFormChanged (EditDashboardForm.view model.editDashboardForm.dashboard)
+            Html.map DashboardFormChanged (EditDashboardForm.view model.editDashboardForm)
 
           else
             text ""
@@ -222,12 +223,14 @@ viewWidget widget =
             div [ class "widget-square" ]
                 [ Widgets.PieChart.view pieWidget.data
                 , button [ class "delete-button", onClick (DeleteWidget pieWidget.widget_id) ] [ text "✖" ]
+                , div [ class "widget-title" ] [ text pieWidget.title ]
                 ]
 
         Histogram histogramWidget ->
             div [ class "widget-square" ]
                 [ Widgets.Histogram.view histogramWidget.data
                 , button [ class "delete-button", onClick (DeleteWidget histogramWidget.widget_id) ] [ text "✖" ]
+                , div [ class "widget-title" ] [ text histogramWidget.title ]
                 ]
 
 

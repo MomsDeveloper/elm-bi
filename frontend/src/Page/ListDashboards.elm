@@ -118,7 +118,7 @@ view model =
         [ viewHeader
         , viewDashboards model.dashboards
         , if model.showAddDashboardForm then
-            Html.map FormChanged (AddDashboardForm.view model.addDashboardForm.dashboard)
+            Html.map FormChanged (AddDashboardForm.view model.addDashboardForm)
 
           else
             text ""
